@@ -18,11 +18,6 @@ app.listen(port, function () {
 const User = require("../schemas/user.js");
 
 app.post("/user", (req, res) => {
-    // User.collection.deleteMany({ name: "박준수" });
-    // User.collection.deleteOne({
-    //     _id: "62b5804d22b8d89cfcfed3d3",
-    // });
-
     let obj = new User({
         id: req.body.id,
         password: req.body.password,
