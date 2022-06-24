@@ -6,25 +6,21 @@ var autoIncrement = require('mongoose-auto-increment');
 autoIncrement.initialize(mongoose.connection);
 
 let articleSchema = new Schema({
-    no:
-    {
-        type: Number,
-        default: 0
-    },
+    no: Number,
     title: String,
     author: String,
     date:
     {
         type: Date,
-        default: Date.now
+        default: Date.now,
     },
     tag: String,
-    content: String
+    content: String,
 });
 
 articleSchema.plugin(autoIncrement.plugin, {
     model: 'article',
-    field: 'article_no',
+    field: 'no',
     startAt: 1, //시작
     increment: 1 // 증가
 });

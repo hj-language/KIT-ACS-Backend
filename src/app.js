@@ -16,6 +16,7 @@ app.listen(port, function () {
 });
 
 const User = require("../schemas/user.js");
+const Article = require("../schemas/article.js");
 
 app.post("/user", (req, res) => {
     let obj = new User({
@@ -35,7 +36,7 @@ app.post("/user", (req, res) => {
 
 app.post("/article", (req, res) => {
     console.log(req.body);
-    let obj = new User({
+    let obj = new Article({
         title: req.body.title,
         author: req.body.author,
         date: req.body.date,
@@ -43,7 +44,7 @@ app.post("/article", (req, res) => {
         content: req.body.content,
     });
     obj.save((err) => console.log("error: ", err));
-    User.find((err, user) => {
+    Article.find((err, user) => {
         if (err) console.log(err);
         else console.log(user);
     });
