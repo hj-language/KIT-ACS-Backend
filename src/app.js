@@ -33,6 +33,23 @@ app.post("/user", (req, res) => {
     res.status(200).end();
 });
 
+app.post("/article", (req, res) => {
+    console.log(req.body);
+    let obj = new User({
+        title: req.body.title,
+        author: req.body.author,
+        date: req.body.date,
+        tag: req.body.tag,
+        content: req.body.content,
+    });
+    obj.save((err) => console.log("error: ", err));
+    User.find((err, user) => {
+        if (err) console.log(err);
+        else console.log(user);
+    });
+    res.status(200).end();
+});
+
 app.post("/login", (req, res) => {
     let userName = "";
 
