@@ -7,4 +7,3 @@ KIT CE-CS Backend
 ```terminal
 $ npm install
 ```
-
