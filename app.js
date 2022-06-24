@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 
-const dbConnect = require("../schemas");
+const dbConnect = require("./schemas");
 dbConnect();
 
 const port = 3000;
@@ -15,8 +15,8 @@ app.listen(port, function () {
     console.log(`Server Connected on ${port}.`);
 });
 
-const User = require("../schemas/user.js");
-const Article = require("../schemas/article.js");
+const User = require("./schemas/user.js");
+const Article = require("./schemas/article.js");
 
 app.post("/user", (req, res) => {
     let obj = new User({
