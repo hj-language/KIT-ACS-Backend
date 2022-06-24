@@ -36,7 +36,6 @@ app.post('/user', (req, res) => {
 app.post('/article', (req, res) => {
     console.log(req.body);
     let obj = new User({
-        no: req.body.no,
         title: req.body.title,
         author: req.body.author,
         date: req.body.date,
