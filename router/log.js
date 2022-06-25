@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../schemas/user");
 
-router.post("/in", (req, res) => {
+router.post("/", (req, res) => {
     let userName = "";
 
     User.findOne({ id: req.body.id }, (err, user) => {
