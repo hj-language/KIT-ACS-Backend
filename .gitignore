@@ -3,3 +3,4 @@ node_modules
 
 # 공개하면 안 되는 파일
 secret.js
+.env
