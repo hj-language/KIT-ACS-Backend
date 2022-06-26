@@ -49,47 +49,31 @@ router.post("/", async (req, res) => {
          *  2. 인증사이트 링크 클릭을 통해 인증?
          */
 
-        // let randomNumber = verifyNumber(111111, 999999);
-        // let emailTemplete;
-        // ejs.renderFile(
-        //     appDir + "/templates/mailContent.ejs",
-        //     { auth: randomNumber },
-        //     (err, data) => {
-        //         if (err) console.log(err);
-        //         emailTemplete = data;
-        //     }
-        // );
-
-        // const transport = nodemailer.createTransport({
-        //     service: "naver",
-        //     host: "smtp.naver.com",
-        //     auth: {
-        //         user: process.env.NODEMAILER_USER,
-        //         pass: process.env.NODEMAILER_PASS,
-        //     },
-        //     port: 587,
-        //     tls: {
-        //         rejectUnauthorized: false,
-        //     },
-        // });
-
-        // let mailOption = {
-        //     // 네이버로 하면 from을 @naver.com으로 설정해야 함; gmail로 바꿀까...
-        //     // from: `[KIT-CE-CS test]`,
-        //     from: `${process.env.NODEMAILER_USER}`,
-        //     to: req.body.webmail,
-        //     subject: "회원가입 test",
-        //     html: emailTemplete,
-        // };
-
-        // transport.sendMail(mailOption, function (error, _) {
-        //     if (error) console.log(error);
-        //     // console.log("전송 완료 : ", info.response);
-        //     transport.close();
-        // });
-
-        // 이메일 완료가 되면...
-        // 이후에..
+         let transporter = mail.createTransport({
+            service: 'naver',
+            auth: {
+                user: '사용할 호스트 메일 주소',
+                pass: '호스트 메일 계정 비밀번호'
+            }
+        });
+        
+        let mailOptions = {
+            from: '호스트 메일 ID',
+            to: email, // 대상 메일 주소 req.body.email
+            subject: '[CE-CS]Authorization Test Mail', // 메일 제목
+            text: 'testnum' // 메일 내용
+        };
+    
+        transporter.sendMail(mailOptions, function(err, info){
+            if (err) {
+                console.log(err);
+            }
+            else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+        // 응답 구현 해야함
+        //res.redirect("/");
 
         let user = new User({
             id: req.body.id,
