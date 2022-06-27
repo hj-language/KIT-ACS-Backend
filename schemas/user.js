@@ -5,10 +5,31 @@ const bcrypt = require("bcrypt");
 const saltFactor = 10;
 
 let userSchema = new Schema({
-    id: String,
-    password: String,
-    name: String,
-    webmail: String,
+    id:
+    {
+        type: String,
+        required: true
+    },
+    password:
+    {
+        type: String,
+        required: true
+    },
+    name:
+    {
+        type: String,
+        required: true
+    },
+    webmail:
+    {
+        type: String,
+        required: true
+    },
+    verify:
+    {
+        type: Boolean,
+        required: true
+    },
 });
 // 스키마 수정 필요 할수도..? webmail verify 여부
 
