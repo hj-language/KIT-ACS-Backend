@@ -20,6 +20,8 @@ router.post("/", verifyUser, (req, res) => {
     res.status(200).end();
 });
 
+/*
+
 router.get("/test-getSession", (req, res) => {
     const id = req.query.id;
     if (req.session.authorization) {
@@ -55,5 +57,7 @@ router.get("/test-deleteSession", (req, res) => {
         res.status(400).json({message: "There is no session"}).end();
     }
 })
+
+*/
 
 module.exports = router;
