@@ -10,4 +10,7 @@ router.use("/sign", Sign);
 const Article = require("./article");
 router.use("/article", Article);
 
+const Comment = require("./comment");
+router.use("/comment", Comment);
+
 module.exports = router;

@@ -6,7 +6,6 @@ const verifyUser = require("./middlewares/authorization").verifyUser;
 router.post("/", (req, res) => {
     console.log(req.body);
     let obj = new Article({
-        no: req.body.no,
         title: req.body.title,
         author: req.body.author,
         date: req.body.date,
