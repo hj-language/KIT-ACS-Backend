@@ -86,7 +86,7 @@ router.patch("/:id", async (req, res) => {
         if (!edit) {
             return res.status(404).send();
         }
-        res.send(edit);
+        res.status(200).send(edit);
     } catch (e) {
         res.status(400).send(e);
     }
