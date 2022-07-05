@@ -3,14 +3,17 @@ const router = express.Router();
 const Article = require("../schemas/article");
 const verifyUser = require("./middlewares/authorization").verifyUser;
 
-router.post("/", verifyUser, (req, res) => {
+router.post("/", (req, res) => {
     console.log(req.body);
     let obj = new Article({
+        no: req.body.no,
         title: req.body.title,
         author: req.body.author,
         date: req.body.date,
         tag: req.body.tag,
         content: req.body.content,
+        views: req.body.views,
+        commentList: req.body.commentList
     });
     obj.save((err) => console.log("error: ", err));
     Article.find((err, user) => {

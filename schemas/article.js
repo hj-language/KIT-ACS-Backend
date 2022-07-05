@@ -6,17 +6,49 @@ var autoIncrement = require('mongoose-auto-increment');
 autoIncrement.initialize(mongoose.connection);
 
 let articleSchema = new Schema({
-    no: Number,
-    title: String,
-    author: String,
-    date:
+    no:
     {
-        type: Date,
-        default: Date.now,
+        type: Number
     },
-    tag: String,
-    content: String,
-});
+    title:
+    {
+        type: String,
+        required: true
+    },
+    author:
+    {
+        type: String,
+        required: true
+    },
+    tag:
+    {
+        type: String,
+        required: true
+    },
+    content:
+    {
+        type: String,
+        required: true
+    },
+    views:
+    {
+        type: Number,
+        required: true
+    },
+
+    commentList:
+    {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'comment',
+        default: null
+    }
+
+},
+    {
+        timestamps: { createdAt: 'date' },
+        versionKey: false
+    }
+);
 
 articleSchema.plugin(autoIncrement.plugin, {
     model: 'article',

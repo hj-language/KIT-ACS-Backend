@@ -6,7 +6,7 @@ module.exports.verifyUser = (req, res, next) => {
     else {
         console.log("No session");
         res.status(400)
-        .json({ message: "You don't have a session"})
-        .end();
+            .json({ message: "You don't have a session" })
+            .end();
     }
 }
