@@ -82,6 +82,7 @@ router.post("/", async (req, res) => {
             password: req.body.password,
             name: req.body.name,
             webmail: req.body.webmail,
+            verify: false,
         });
         user.save((err) => console.log("error: ", err));
 

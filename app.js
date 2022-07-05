@@ -1,11 +1,35 @@
 const express = require("express");
 const app = express();
+app.use(express.json());
+
+const session = require("express-session");
+const redisStore = require("connect-redis")(session);
+const sessionSecret = require("./secret.js").sessionSecret;
+const redis = require('ioredis')
+
+const redisClient = redis.createClient({
+    host: "localhost",
+    port: 6379
+})
+
+app.use(session({
+    secret: sessionSecret,      // SID 생성 시 사용되는 비밀키
+    resave: false,              // 변경 사항이 없으면 세션 저장X
+    saveUninitialized: false,   // 변경되지 않은 상태의 세션 저장X
+    name: "kit_acs",
+    cookie: {
+        httpOnly: true,
+        secure: false,
+    },
+    store: new redisStore({ 
+        client: redisClient
+    }),
+}))
 
 const dbConnect = require("./schemas");
 dbConnect();
 
 const port = 3000;
-app.use(express.json());
 
 const routers = require("./router");
 app.use('/', routers);
