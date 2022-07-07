@@ -2,18 +2,12 @@ const express = require("express");
 const router = express.Router();
 const User = require("../schemas/user");
 const nodemailer = require("nodemailer");
-const ejs = require("ejs");
-const path = require("path");
 const verifyEmail = require("../secret.js").verifyEmail;
 const crypto = require("crypto");
 require("dotenv").config();
 
-var appDir = path.dirname(require.main.filename);
-
-let verifyNumber = function (min, max) {
-    let randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-    return randomNumber;
-};
+//const path = require("path");
+// var appDir = path.dirname(require.main.filename);
 
 router.post("/del", (req, res) => {
     User.find((err, user) => {
@@ -101,7 +95,6 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/confirmEmail", (req, res) => {
-    // console.log(req.query);
     userConfirm = User.findOne({ webmail: req.query.email }, (err, user) => {
         const _id = user._id;
 
@@ -110,9 +103,9 @@ router.get("/confirmEmail", (req, res) => {
 
         if (verify === req.query.code) {
             User.findByIdAndUpdate(_id, { $set: { verify: true } }).exec();
-            return res.status(200).redirect(`/`);
+            return res.status(200);
         } else {
-            console.log("fuck!");
+            return res.status(403);
         }
     });
 });
