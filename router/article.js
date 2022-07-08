@@ -32,6 +32,11 @@ router.post("/", (req, res) => {
 // 전체 게시물 조회
 router.get("/", async (req, res) => {
     try {
+        // Article.find((err, user) => {
+        //     if (err) console.log(err);
+        //     else console.log(user);
+        // });
+
         const results = await Article.find({ ...Article });
         // console.log(results);
         return res.json(results).status(200);
@@ -44,19 +49,35 @@ router.get("/", async (req, res) => {
 });
 
 // 특정(_id) 게시물 조회
+// 이전글 다음글도 가져오는걸 여기서 구해야 하나,,,?
 router.get("/:id", async (req, res) => {
     const _id = req.params.id;
 
     try {
         const results = await Article.findOne({ _id, ...Article });
-        if (!results) {
-            return res.status(404).send();
-        }
+
         // console.log(results);
-        return res.json(results).status(200);
+
+        const nextPost = await Article.find({
+            date: { $gt: results.date },
+        }).limit(1);
+        const prevPost = await Article.find({
+            date: { $lt: results.date },
+        })
+            .sort({ _id: -1 })
+            .limit(1);
+
+        // console.log("next : ", nextPost);
+        // console.log("prev : ", prevPost);
+
+        await Article.findByIdAndUpdate(_id, {
+            $set: { views: ++results.views },
+        }).exec();
+
+        return res.json({ results, nextPost, prevPost }).status(200);
         // res.render("post", { posts: results });
     } catch (e) {
-        return res.status(500).send();
+        return res.status(404).send("No post");
     }
 });
 
