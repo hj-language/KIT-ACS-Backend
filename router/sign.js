@@ -63,13 +63,20 @@ router.post("/", async (req, res) => {
             from: verifyEmail.id,
             to: email, // 대상 메일 주소 req.body.email
             subject: "[ACS]Authorization Test Mail", // 메일 제목
-            html: `<h1>이메일 인증</h1>
-            <div>
-                아래 버튼을 눌러 인증을 완료해주세요.
+            html: `
+            <div style="border: black 2px solid; border-radius: 1rem; margin-right: 1rem; padding: 1rem; text-align: center; max-width: 500px;">
+                <div style="font-size: 2rem">이메일 인증</div></br>
+                <div style="font-size: 1.2rem">
+                    아래 버튼을 눌러 인증을 완료해주세요.
+                </div>
+                </br>
+                <div style="margin: 0.2rem;">
+                    <a 
+                        style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
+                        href='http://localhost:3000/sign/confirmEmail?code=${code}&email=${email}'>이메일 인증하기</a>
+                </div>
             </div>
-            <div>
-                <a href='http://localhost:3000/sign/confirmEmail?code=${code}&email=${email}'>이메일 인증하기</a>
-            </div>`,
+            `,
         };
 
         transporter.sendMail(mailOptions, function (err, info) {
@@ -103,7 +110,7 @@ router.get("/confirmEmail", (req, res) => {
 
         if (verify === req.query.code) {
             User.findByIdAndUpdate(_id, { $set: { verify: true } }).exec();
-            return res.status(200);
+            return res.status(200).send("인증이 완료되었습니다.");
         } else {
             return res.status(403);
         }

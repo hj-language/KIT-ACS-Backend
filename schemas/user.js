@@ -30,7 +30,11 @@ let userSchema = new Schema({
         type: Boolean,
         required: true
     },
-});
+},
+{
+    versionKey: false
+}
+);
 // 스키마 수정 필요 할수도..? webmail verify 여부
 
 /**
