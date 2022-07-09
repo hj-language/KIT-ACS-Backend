@@ -1,12 +1,11 @@
 module.exports.verifyUser = (req, res, next) => {
-    if (req.session.authorization) {
-        console.log(req.session);
+    console.log(req.session);
+    if (req.session.authorization && req.session.cookie._expires > new Date()) {
         next();
     }
     else {
         console.log("No session");
-        res.status(400)
-            .json({ message: "You don't have a session" })
-            .end();
+        res.status(401)
+            .json({ message: "Unauthorized" })
     }
 }
