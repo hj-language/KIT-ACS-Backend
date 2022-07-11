@@ -101,6 +101,17 @@ router.post("/", async (req, res) => {
     } catch (err) {}
 });
 
+// 아이디 중복 확인
+router.get("/dupId", (req, res) => {
+
+})
+
+// 이메일 중복 확인
+router.get("/dupEmail", (req, res) => {
+
+})
+
+// 이메일 인증
 router.get("/confirmEmail", (req, res) => {
     userConfirm = User.findOne({ webmail: req.query.email }, (err, user) => {
         const _id = user._id;

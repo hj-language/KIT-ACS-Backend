@@ -13,4 +13,7 @@ router.use("/article", Article);
 const Comment = require("./comment");
 router.use("/comment", Comment);
 
+const Mypage = require("./mypage");
+router.use("/mypage", Mypage);
+
 module.exports = router;
