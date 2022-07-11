@@ -7,12 +7,9 @@ app.use(cors());
 const session = require("express-session");
 const redisStore = require("connect-redis")(session);
 const sessionSecret = require("./secret.js").sessionSecret;
-const redis = require('ioredis')
-
-const redisClient = redis.createClient({
-    host: "localhost",
-    port: 6379
-})
+const redisHost = require("./secret.js").redisHost;
+const redis = require('ioredis');
+const redisClient = redis.createClient(redisHost);
 
 app.use(session({
     secret: sessionSecret,      // SID 생성 시 사용되는 비밀키
@@ -39,21 +36,3 @@ app.use('/', routers);
 app.listen(port, function () {
     console.log(`Server Connected on ${port}.`);
 });
-
-/*
-app.post("/user", (req, res) => {
-    let obj = new User({
-        id: req.body.id,
-        password: req.body.password,
-        name: req.body.name,
-        webmail: req.body.webmail,
-    });
-    obj.save((err) => console.log("error: ", err));
-    User.find((err, user) => {
-        if (err) console.log(err);
-        else console.log(user);
-    });
-    console.log(req.body);
-    res.status(200).end();
-});
-*/
