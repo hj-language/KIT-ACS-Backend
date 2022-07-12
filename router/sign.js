@@ -26,12 +26,9 @@ router.post("/", async (req, res) => {
     });
     try {
         const dupId = await User.findOne({ id: req.body.id });
-        const dupName = await User.findOne({ name: req.body.name });
         const dupEmail = await User.findOne({ webmail: req.body.webmail });
         if (dupId) return res.status(403).send("사용중인 아이디입니다.");
-        if (dupName) return res.status(403).send("사용중인 닉네임입니다.");
-        if (dupEmail)
-            return res.status(403).send("이미 가입된 회원정보가 존재합니다.");
+        if (dupEmail) return res.status(403).send("사용중인 이메일입니다.");
 
         let email = req.body.webmail;
         const emailValid = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@kumoh\.ac.kr$/;
@@ -98,17 +95,27 @@ router.post("/", async (req, res) => {
         user.save((err) => console.log("error: ", err));
 
         res.status(201).send("사용자 가입 완료");
-    } catch (err) {}
+    } catch (err) {
+        res.status(500).end();
+    }
 });
 
 // 아이디 중복 확인
-router.get("/dupId", (req, res) => {
-
+router.get("/dupId", async (req, res) => {
+    if (!req.body.id) return res.status(400).send("잘못된 요청입니다.");
+    
+    const dupId = await User.findOne({ id: req.body.id });
+    if (dupId) return res.status(403).send("사용중인 아이디입니다.");
+    else return res.status(200).send("등록 가능한 아이디입니다.")
 })
 
 // 이메일 중복 확인
-router.get("/dupEmail", (req, res) => {
+router.get("/dupEmail", async (req, res) => {
+    if (!req.body.webmail) return res.status(400).send("잘못된 요청입니다.");
 
+    const dupEmail = await User.findOne({ webmail: req.body.webmail });
+    if (dupEmail) return res.status(403).send("사용 중인 이메일입니다.");
+    else return res.status(200).send("등록 가능한 이메일입니다.")
 })
 
 // 이메일 인증
