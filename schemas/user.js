@@ -2,38 +2,34 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const bcrypt = require("bcrypt");
-const saltFactor = 10;
+const saltFactor = require("../secret.js").saltFactor;
 
-let userSchema = new Schema({
-    id:
+let userSchema = new Schema(
     {
-        type: String,
-        required: true
+        id: {
+            type: String,
+            required: true,
+        },
+        password: {
+            type: String,
+            required: true,
+        },
+        name: {
+            type: String,
+            required: true,
+        },
+        webmail: {
+            type: String,
+            required: true,
+        },
+        verify: {
+            type: Boolean,
+            required: true,
+        },
     },
-    password:
     {
-        type: String,
-        required: true
-    },
-    name:
-    {
-        type: String,
-        required: true
-    },
-    webmail:
-    {
-        type: String,
-        required: true
-    },
-    verify:
-    {
-        type: Boolean,
-        required: true
-    },
-},
-{
-    versionKey: false
-}
+        versionKey: false,
+    }
 );
 // 스키마 수정 필요 할수도..? webmail verify 여부
 
@@ -43,15 +39,18 @@ let userSchema = new Schema({
 userSchema.pre("save", function (next) {
     let user = this;
 
-    if (!user.isModified("password")) return next();
-    bcrypt.genSalt(saltFactor, function (err, salt) {
-        if (err) return next(err);
-        bcrypt.hash(user.password, salt, function (err, hash) {
+    if (!user.isModified("password")) {
+        return next();
+    } else {
+        bcrypt.genSalt(saltFactor, function (err, salt) {
             if (err) return next(err);
-            user.password = hash;
-            next();
+            bcrypt.hash(user.password, salt, function (err, hash) {
+                if (err) return next(err);
+                user.password = hash;
+                next();
+            });
         });
-    });
+    }
 });
 
 /**
