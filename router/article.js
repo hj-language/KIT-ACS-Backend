@@ -41,6 +41,7 @@ router.get("/", async (req, res) => {
     }
 })
 
+// 게시물 태그별 조회
 router.get("/:tag", async (req, res) => {
     try {
         const tag = req.params.tag
@@ -48,10 +49,10 @@ router.get("/:tag", async (req, res) => {
         const results = await Article.find({ tag: tag, ...Article })
         return res.json(results).status(200)
     } catch (e) {
-        console.log(e);
-        return res.status(500).send()
+        console.log("error: ", e)
+        res.status(500).send({ message: "Server Error" })
     }
-});
+})
 
 // 특정(_id) 게시물 조회
 // 이전글 다음글도 가져오는걸 여기서 구해야 하나,,,?
