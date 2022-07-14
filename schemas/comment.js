@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const mongoose = require('mongoose')
+const { Schema } = mongoose
 
 /*
 //auto_increment init
-var autoIncrement = require('mongoose-auto-increment');
-autoIncrement.initialize(mongoose.connection);
+var autoIncrement = require('mongoose-auto-increment')
+autoIncrement.initialize(mongoose.connection)
 */
 
 let commentSchema = new Schema({
@@ -40,7 +40,7 @@ let commentSchema = new Schema({
         timestamps: { createdAt: 'date' },
         versionKey: false
     }
-);
+)
 
 /*
 commentSchema.plugin(autoIncrement.plugin, {
@@ -48,6 +48,6 @@ commentSchema.plugin(autoIncrement.plugin, {
     field: 'no',
     startAt: 1, //시작
     increment: 1 // 증가
-});*/
+})*/
 
-module.exports = mongoose.model("comment", commentSchema);
+module.exports = mongoose.model("comment", commentSchema)

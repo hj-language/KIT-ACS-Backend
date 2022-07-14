@@ -1,8 +1,8 @@
-const mongoose = require("mongoose");
-const { Schema } = mongoose;
+const mongoose = require("mongoose")
+const { Schema } = mongoose
 
-const bcrypt = require("bcrypt");
-const saltFactor = require("../secret.js").saltFactor;
+const bcrypt = require("bcrypt")
+const saltFactor = require("../secret.js").saltFactor
 
 let userSchema = new Schema(
     {
@@ -30,7 +30,7 @@ let userSchema = new Schema(
     {
         versionKey: false,
     }
-);
+)
 
 /**
  * 비밀번호 해시
@@ -39,18 +39,18 @@ userSchema.pre("save", function (next) {
     let user = this;
 
     if (!user.isModified("password")) {
-        return next();
+        return next()
     } else {
         bcrypt.genSalt(saltFactor, function (err, salt) {
-            if (err) return next(err);
+            if (err) return next(err)
             bcrypt.hash(user.password, salt, function (err, hash) {
-                if (err) return next(err);
+                if (err) return next(err)
                 user.password = hash;
-                next();
-            });
-        });
+                next()
+            })
+        })
     }
-});
+})
 
 /**
  *
@@ -59,9 +59,9 @@ userSchema.pre("save", function (next) {
  */
 userSchema.methods.comparePassword = function (pw, next) {
     bcrypt.compare(pw, this.password, (err, isMatch) => {
-        if (err) return next(err);
-        next(null, isMatch);
-    });
-};
+        if (err) return next(err)
+        next(null, isMatch)
+    })
+}
 
-module.exports = mongoose.model("user", userSchema);
+module.exports = mongoose.model("user", userSchema)

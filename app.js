@@ -1,15 +1,15 @@
-const express = require("express");
-const cors = require("cors");
-const app = express();
-app.use(express.json());
-app.use(cors());
+const express = require("express")
+const cors = require("cors")
+const app = express()
+app.use(express.json())
+app.use(cors())
 
-const session = require("express-session");
-const redisStore = require("connect-redis")(session);
-const sessionSecret = require("./secret.js").sessionSecret;
-const redisHost = require("./secret.js").redisHost;
-const redis = require('ioredis');
-const redisClient = redis.createClient(redisHost);
+const session = require("express-session")
+const redisStore = require("connect-redis")(session)
+const sessionSecret = require("./secret.js").sessionSecret
+const redisHost = require("./secret.js").redisHost
+const redis = require('ioredis')
+const redisClient = redis.createClient(redisHost)
 
 app.use(session({
     secret: sessionSecret,      // SID 생성 시 사용되는 비밀키
@@ -25,14 +25,14 @@ app.use(session({
     }),
 }))
 
-const dbConnect = require("./schemas");
-dbConnect();
+const dbConnect = require("./schemas")
+dbConnect()
 
-const port = 3000;
+const port = 3000
 
-const routers = require("./router");
-app.use('/', routers);
+const routers = require("./router")
+app.use('/', routers)
 
 app.listen(port, '192.168.0.21', function () {
-    console.log(`Server Connected on ${port}.`);
-});
+    console.log(`Server Connected on ${port}.`)
+})
