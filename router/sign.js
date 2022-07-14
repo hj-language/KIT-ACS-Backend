@@ -1,52 +1,50 @@
-const express = require("express");
-const router = express.Router();
-const User = require("../schemas/user");
-const nodemailer = require("nodemailer");
-const verifyEmail = require("../secret.js").verifyEmail;
-const crypto = require("crypto");
-require("dotenv").config();
+const express = require("express")
+const router = express.Router()
+const User = require("../schemas/user")
+const nodemailer = require("nodemailer")
+const verifyEmail = require("../secret.js").verifyEmail
+const crypto = require("crypto")
+require("dotenv").config()
 
-//const path = require("path");
-// var appDir = path.dirname(require.main.filename);
+//const path = require("path")
+// var appDir = path.dirname(require.main.filename)
 
 router.post("/del", (req, res) => {
     User.find((err, user) => {
-        if (err) console.log(err);
-        else console.log(user);
-    });
-    User.collection.deleteMany({ name: "박준수" });
-    User.collection.deleteMany({ webmail: "pks5294@kumoh.ac.kr" });
-    res.status(200).end();
-});
+        if (err) console.log(err)
+        else console.log(user)
+    })
+    User.collection.deleteMany({ name: "박준수" })
+    User.collection.deleteMany({ webmail: "pks5294@kumoh.ac.kr" })
+    res.status(200).end()
+})
 
 router.post("/", async (req, res) => {
-    User.find((err, user) => {
-        if (err) console.log(err);
-        else console.log(user);
+    User.find((e, user) => {
+        if (e) console.log(e)
+        else console.log(user)
     });
-    try {
-        const dupId = await User.findOne({ id: req.body.id });
-        const dupEmail = await User.findOne({ webmail: req.body.webmail });
-        if (dupId) return res.status(403).send("사용중인 아이디입니다.");
-        if (dupEmail) return res.status(403).send("사용중인 이메일입니다.");
 
-        let email = req.body.webmail;
-        const emailValid = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@kumoh\.ac.kr$/;
+    try {
+        const dupId = await User.findOne({ id: req.body.id })
+        const dupWebmail = await User.findOne({ webmail: req.body.webmail })
+        if (dupId) return res.status(403).send({ message: "사용중인 아이디입니다." })
+        if (dupWebmail) return res.status(403).send({ message: "사용중인 이메일입니다." })
+
+        /*
+        let email = req.body.webmail
+        const emailValid = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@kumoh\.ac.kr$/
 
         if (!emailValid.test(email)) {
             return res.json({
                 message: "금오공과대학교 웹메일을 통한 가입만 가능합니다 :)",
-            });
+            })
         }
+        */
 
-        /**
-         * 인증방법
-         *
-         *  인증사이트 링크 클릭을 통해 인증
-         */
-
-        const toHash = `${req.body.id}${req.body.name}${req.body.webmail}`;
-        const code = crypto.createHash("sha256").update(toHash).digest("hex");
+        // 인증방법: 인증사이트 링크 클릭을 통해 인증
+        const toHash = `${req.body.id}${req.body.name}${req.body.webmail}`
+        const code = crypto.createHash("sha256").update(toHash).digest("hex")
 
         let transporter = nodemailer.createTransport({
             service: "naver",
@@ -54,7 +52,7 @@ router.post("/", async (req, res) => {
                 user: verifyEmail.id,
                 pass: verifyEmail.pw,
             },
-        });
+        })
 
         let mailOptions = {
             from: verifyEmail.id,
@@ -74,16 +72,13 @@ router.post("/", async (req, res) => {
                 </div>
             </div>
             `,
-        };
+        }
 
-        transporter.sendMail(mailOptions, function (err, info) {
-            if (err) {
-                console.log(err);
-            } else {
-                console.log("Email sent: " + info.response);
-            }
-            transporter.close();
-        });
+        transporter.sendMail(mailOptions, function (e, info) {
+            if (e) console.log(e)
+            else console.log("Email sent: " + info.response)
+            transporter.close()
+        })
 
         let user = new User({
             id: req.body.id,
@@ -91,48 +86,57 @@ router.post("/", async (req, res) => {
             name: req.body.name,
             webmail: req.body.webmail,
             verify: false,
-        });
-        user.save((err) => console.log("error: ", err));
-
-        res.status(201).send("사용자 가입 완료");
-    } catch (err) {
-        res.status(500).end();
+        })
+        user.save((e) => {
+            if (e) {
+                console.log("error: ", e)
+                res.status(500).send({ message: "Server Error" })
+            }
+        })
+        res.status(201).send("사용자 가입 완료")
+    } catch (e) {
+        console.log("error: ", e)
+        res.status(500).send({ message: "Server Error" })
     }
 });
 
 // 아이디 중복 확인
 router.get("/dupId", async (req, res) => {
-    if (!req.body.id) return res.status(400).send("잘못된 요청입니다.");
+    if (!req.body.id) return res.status(404).send({ message: "No User" })
     
     const dupId = await User.findOne({ id: req.body.id });
-    if (dupId) return res.status(403).send("사용중인 아이디입니다.");
-    else return res.status(200).send("등록 가능한 아이디입니다.")
+    if (dupId) return res.status(403).send({ message: "Duplicated Id" })
+    else return res.status(200).send({ message: "OK" })
 })
 
 // 이메일 중복 확인
-router.get("/dupEmail", async (req, res) => {
-    if (!req.body.webmail) return res.status(400).send("잘못된 요청입니다.");
+router.get("/dupWebmail", async (req, res) => {
+    if (!req.body.webmail) return res.status(404).send({ message: "No User" })
 
-    const dupEmail = await User.findOne({ webmail: req.body.webmail });
-    if (dupEmail) return res.status(403).send("사용 중인 이메일입니다.");
-    else return res.status(200).send("등록 가능한 이메일입니다.")
+    const dupWebmail = await User.findOne({ webmail: req.body.webmail });
+    if (dupWebmail) return res.status(403).send({ message: "Duplicated Id" })
+    else return res.status(200).send({ message: "OK" })
 })
 
 // 이메일 인증
 router.get("/confirmEmail", (req, res) => {
-    userConfirm = User.findOne({ webmail: req.query.email }, (err, user) => {
-        const _id = user._id;
-
-        const toHash = `${user.id}${user.name}${user.webmail}`;
-        const verify = crypto.createHash("sha256").update(toHash).digest("hex");
-
-        if (verify === req.query.code) {
-            User.findByIdAndUpdate(_id, { $set: { verify: true } }).exec();
-            return res.status(200).send("인증이 완료되었습니다.");
-        } else {
-            return res.status(403);
+    userConfirm = User.findOne({ webmail: req.query.email }, (e, user) => {
+        if (e) {
+            console.log("error: ", e)
+            res.status(500).send({ message: "Server Error" })
         }
-    });
-});
 
-module.exports = router;
+        const _id = user._id;
+        const toHash = `${user.id}${user.name}${user.webmail}`
+        const code = crypto.createHash("sha256").update(toHash).digest("hex")
+
+        if (code === req.query.code) {
+            User.findByIdAndUpdate(_id, { $set: { verify: true } }).exec()
+            return res.status(200).send({ message: "Success" })
+        } else {
+            return res.status(403).send({ message: "Invalid code" })
+        }
+    })
+})
+
+module.exports = router

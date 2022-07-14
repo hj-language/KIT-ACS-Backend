@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const mongoose = require('mongoose')
+const { Schema } = mongoose
 
 
 let articleSchema = new Schema({
@@ -43,4 +43,4 @@ let articleSchema = new Schema({
     }
 );
 
-module.exports = mongoose.model("article", articleSchema);
+module.exports = mongoose.model("article", articleSchema)
