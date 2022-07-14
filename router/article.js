@@ -23,16 +23,11 @@ router.post("/", verifyUser, (req, res) => {
     obj.save((err) => {
         if (err) {
             console.log("error: ", err);
-            return res.status(500)
-                .json({ message: "Server Error" })
-                .end();
+            return res.status(500).json({ message: "Server Error" }).end();
         } else {
-            res.status(200)
-                .json({ message: "Success" })
-                .end();
+            res.status(200).json({ message: "Success" }).end();
         }
     });
-    
 });
 
 // 전체 게시물 조회
@@ -44,6 +39,18 @@ router.get("/", async (req, res) => {
         // });
 
         const results = await Article.find({ ...Article });
+        return res.json(results).status(200);
+    } catch (e) {
+        console.log(e);
+        return res.status(500).send();
+    }
+});
+
+router.get("/:tag", async (req, res) => {
+    try {
+        const tag = req.params.tag;
+
+        const results = await Article.find({ tag: tag, ...Article });
         return res.json(results).status(200);
     } catch (e) {
         console.log(e);
@@ -94,10 +101,10 @@ router.patch("/:id", verifyUser, async (req, res) => {
         if (req.session.authorization != results.author)
             return res.status(401).send({ error: "No permission" });
     } catch (e) {
-        console.log(e)
+        console.log(e);
         return res.status(500).send();
     }
-        
+
     const article = Object.keys(req.body);
     const allowedUpdates = ["title", "content"]; // 변경 가능한 것 (제목, 내용)
 
