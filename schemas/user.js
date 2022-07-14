@@ -31,7 +31,6 @@ let userSchema = new Schema(
         versionKey: false,
     }
 );
-// 스키마 수정 필요 할수도..? webmail verify 여부
 
 /**
  * 비밀번호 해시
