@@ -41,7 +41,20 @@ router.get("/", async (req, res) => {
     }
 })
 
-// 특정(_id) 게시물 조회 + 이전글, 다음글
+router.get("/:tag", async (req, res) => {
+    try {
+        const tag = req.params.tag
+
+        const results = await Article.find({ tag: tag, ...Article })
+        return res.json(results).status(200)
+    } catch (e) {
+        console.log(e);
+        return res.status(500).send()
+    }
+});
+
+// 특정(_id) 게시물 조회
+// 이전글 다음글도 가져오는걸 여기서 구해야 하나,,,?
 router.get("/:id", async (req, res) => {
     const _id = req.params.id
 
@@ -86,6 +99,7 @@ router.patch("/:id", verifyUser, async (req, res) => {
     const allowedUpdates = ["title", "content"] // 변경 가능한 것 (제목, 내용)
 
     const isValid = article.every((update) =>
+
         allowedUpdates.includes(update)
     )
 
