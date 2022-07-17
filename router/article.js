@@ -95,7 +95,7 @@ router.patch("/:id", verifyUser, async (req, res) => {
         console.log("error: ", e);
         return res.status(500).send({ message: "Server Error" })
     }
-        
+
     const article = Object.keys(req.body)
     const allowedUpdates = ["title", "content"] // 변경 가능한 것 (제목, 내용)
 
@@ -137,6 +137,9 @@ router.delete("/:id", verifyUser, async (req, res) => {
     }
 
     try {
+        //연결된 comment들도 삭제 필요?
+        //article.js에서 구현하는 건가?
+        /*const deletedCommentCnt = await Comment.deleteMany({ articleId: _id })*/
         const deletedArticle = await Article.findByIdAndDelete(_id)
         if (!deletedArticle) {
             return res.status(404).send({ message: "No Post" })
