@@ -19,7 +19,7 @@ router.post("/del", (req, res) => {
     res.status(200).end()
 })
 
-router.post("/", async (req, res) => {
+router.post("/up", async (req, res) => {
     User.find((e, user) => {
         if (e) console.log(e)
         else console.log(user)
@@ -75,7 +75,10 @@ router.post("/", async (req, res) => {
         }
 
         transporter.sendMail(mailOptions, function (e, info) {
-            if (e) console.log(e)
+            if (e) {
+                console.log("error: ", e)
+                res.status(500).send({ message: "Server Error" })
+            }
             else console.log("Email sent: " + info.response)
             transporter.close()
         })
