@@ -24,7 +24,12 @@ let commentSchema = new Schema({
         type: String,
         required: true
     },
-    changed:
+    isChanged:
+    {
+        type: Boolean,
+        default: false,
+    },
+    idDeleted:
     {
         type: Boolean,
         default: false,

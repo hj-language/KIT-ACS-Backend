@@ -7,39 +7,60 @@ const verifyUser = require("./middlewares/authorization").verifyUser
 
 //댓글 추가
 router.post("/:id", async (req, res) => {
-    const articleId = req.params.id
+    const refId = req.params.id
+
 
     let newComment = new Comment({
-        articleId: articleId,
+        articleId: refId,
         author: req.body.author,
         content: req.body.content
     })
 
-    newComment.save((e) => {
-        if (e) {
-            console.log("error: ", e)
-            res.status(500).send({ message: "Server Error" })
-        } else {
-            res.status(200).send({ message: "Success" })
+    Article.findById(refId, (e, Doc) => {
+        //Docuument = Comment or Recomment
+        if (!Doc) {
+            //Documment = Recomment
+            if (article.recommentList == null) {
+                return res.status(404).send({ message: "This is Recomment" })
+            }
+            //Document = Comment
+            else {
+                newComment.save((e) => {
+                    if (e) {
+                        console.log("error: ", e)
+                        res.status(500).send({ message: "Server Error" })
+                    } else {
+                        res.status(200).send({ message: "Success" })
+                    }
+                })
+
+                await Comment.findByIdAndUpdate(refId,
+                    { $push: { recommentList: newComment._id } }).exec()
+            }
+        }
+        //Document = Article
+        else {
+            newComment.save((e) => {
+                if (e) {
+                    console.log("error: ", e)
+                    res.status(500).send({ message: "Server Error" })
+                } else {
+                    res.status(200).send({ message: "Success" })
+                }
+            })
+
+            newComment.recommentList = []
+            await Article.findByIdAndUpdate(refId,
+                { $push: { commentList: newComment._id } }).exec()
         }
     })
 
-    /*
-    let article = await Article.findOne({ articleId, ...Article }).exec()
-    let commentList = article.commentList.push(newComment._id)
-    let searchDoc = { _id: ObjectID( _id )};
-    await Article.findByIdAndReplace(articleId,
-        {  } },
-        { upsert: true }).exec();
-    */
-    await Article.findByIdAndUpdate(articleId,
-        { $push: { commentList: newComment._id } }).exec();
-});
+})
 
 // 전체 댓글 조회
 router.get("/:id", async (req, res) => {
     try {
-        const comments = await Comment.find({ articleId: req.params.id })
+        const comments = await Comment.find({ articleId: req.params.id }).populate("recommentList")
         res.json(comments).status(200)
         console.log(comments)
     } catch (e) {
@@ -116,4 +137,5 @@ router.delete("/:id", async (req, res) => {
         res.status(500).send({ message: "Server Error" })
     }
 })
+
 module.exports = router
