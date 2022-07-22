@@ -23,16 +23,18 @@ router.post("/up", async (req, res) => {
     User.find((e, user) => {
         if (e) console.log(e)
         else console.log(user)
-    });
+    })
 
     try {
         const dupId = await User.findOne({ id: req.body.id })
         const dupWebmail = await User.findOne({ webmail: req.body.webmail })
-        if (dupId) return res.status(403).send({ message: "사용중인 아이디입니다." })
-        if (dupWebmail) return res.status(403).send({ message: "사용중인 이메일입니다." })
+        if (dupId)
+            return res.status(403).send({ message: "사용중인 아이디입니다." })
+        if (dupWebmail)
+            return res.status(403).send({ message: "사용중인 이메일입니다." })
 
         /*
-        let email = req.body.webmail
+        
         const emailValid = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@kumoh\.ac.kr$/
 
         if (!emailValid.test(email)) {
@@ -41,6 +43,7 @@ router.post("/up", async (req, res) => {
             })
         }
         */
+        let email = req.body.webmail
 
         // 인증방법: 인증사이트 링크 클릭을 통해 인증
         const toHash = `${req.body.id}${req.body.name}${req.body.webmail}`
@@ -78,8 +81,7 @@ router.post("/up", async (req, res) => {
             if (e) {
                 console.log("error: ", e)
                 res.status(500).send({ message: "Server Error" })
-            }
-            else console.log("Email sent: " + info.response)
+            } else console.log("Email sent: " + info.response)
             transporter.close()
         })
 
@@ -101,13 +103,13 @@ router.post("/up", async (req, res) => {
         console.log("error: ", e)
         res.status(500).send({ message: "Server Error" })
     }
-});
+})
 
 // 아이디 중복 확인
 router.get("/dupId", async (req, res) => {
     if (!req.body.id) return res.status(404).send({ message: "No User" })
-    
-    const dupId = await User.findOne({ id: req.body.id });
+
+    const dupId = await User.findOne({ id: req.body.id })
     if (dupId) return res.status(403).send({ message: "Duplicated Id" })
     else return res.status(200).send({ message: "OK" })
 })
@@ -116,7 +118,7 @@ router.get("/dupId", async (req, res) => {
 router.get("/dupWebmail", async (req, res) => {
     if (!req.body.webmail) return res.status(404).send({ message: "No User" })
 
-    const dupWebmail = await User.findOne({ webmail: req.body.webmail });
+    const dupWebmail = await User.findOne({ webmail: req.body.webmail })
     if (dupWebmail) return res.status(403).send({ message: "Duplicated Id" })
     else return res.status(200).send({ message: "OK" })
 })
@@ -129,7 +131,7 @@ router.get("/confirmEmail", (req, res) => {
             res.status(500).send({ message: "Server Error" })
         }
 
-        const _id = user._id;
+        const _id = user._id
         const toHash = `${user.id}${user.name}${user.webmail}`
         const code = crypto.createHash("sha256").update(toHash).digest("hex")
 

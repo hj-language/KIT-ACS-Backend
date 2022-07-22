@@ -8,7 +8,7 @@ const session = require("express-session")
 const redisStore = require("connect-redis")(session)
 const sessionSecret = require("./secret.js").sessionSecret
 const redisHost = require("./secret.js").redisHost
-const redis = require('ioredis')
+const redis = require("ioredis")
 const redisClient = redis.createClient(redisHost)
 
 app.use(
@@ -25,7 +25,7 @@ app.use(
             client: redisClient,
         }),
     })
-);
+)
 
 const dbConnect = require("./schemas")
 dbConnect()
@@ -35,10 +35,10 @@ const port = 3000
 const routers = require("./router")
 app.use("/", routers)
 
-app.listen(port, "192.168.0.21", function () {
-    console.log(`Server Connected on ${port}.`)
-})
-
-// app.listen(port, function () {
+// app.listen(port, "192.168.0.21", function () {
 //     console.log(`Server Connected on ${port}.`)
 // })
+
+app.listen(port, function () {
+    console.log(`Server Connected on ${port}.`)
+})
