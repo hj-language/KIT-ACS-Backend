@@ -10,27 +10,6 @@ const verifyUser = require("./middlewares/authorization").verifyUser
 // 404 Not Found
 // 500 Internal Server Error
 
-/**
- * postsLimit
- * displayPages
- * totalPosts
- * 
- * 
- * prev = (startPage == 1) ? false : true
- * next = (endPage == totalPages) ? false : true
- * 
- * totalPages = ( (totalPosts - 1) / postsLimit ) + 1
- * 
-    int endPage = (((currentPage-1)/displayPageNum)+1) * displayPageNum;
-
-    if(totalPages < endPage) 
-        endPage = totalPages;
- * startPage = ((currentPage-1)/displayPageNum) * displayPageNum + 1
- *
- * 
- * 
- */
-
 // 게시물 추가
 router.post("/", verifyUser, (req, res) => {
     let newArticle = new Article({
@@ -51,11 +30,56 @@ router.post("/", verifyUser, (req, res) => {
     })
 })
 
+const paging = (page, totalArticle, limit) => {
+    page = parseInt(page)
+    limit = parseInt(limit)
+    totalArticle = parseInt(totalArticle)
+
+    let pageNum = page || 1
+    let postLimit = limit || 20
+    const pagination = 10
+    const hidePost = page === 1 ? 0 : (page - 1) * postLimit
+    const totalPages = Math.ceil((totalArticle - 1) / postLimit)
+    const startPage = Math.floor((pageNum - 1) / pagination) * pagination + 1
+    let endPage = startPage + pagination - 1
+
+    if (pageNum > totalPages) {
+        pageNum = totalPages
+    }
+    if (endPage > totalPages) {
+        endPage = totalPages
+    }
+    if (totalPages === 0) {
+        endPage = 1
+    }
+
+    return { startPage, endPage, hidePost, postLimit, totalPages, pageNum }
+}
+
 // 전체 게시물 조회
 router.get("/", async (req, res) => {
+    const { page } = req.query
+    const { limit } = req.query
     try {
-        const articles = await Article.find({ ...Article })
-        res.json(articles).status(200)
+        // const articles = await Article.find({ ...Article })
+        const totalArticle = await Article.countDocuments({})
+
+        let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
+            paging(page, totalArticle, limit)
+
+        const board = await Article.find({})
+            .sort({ createAt: -1 })
+            .skip(hidePost)
+            .limit(postLimit)
+
+        res.json({
+            board,
+            pageNum,
+            startPage,
+            endPage,
+            postLimit,
+            totalPages,
+        }).status(200)
     } catch (e) {
         console.log("error: ", e)
         res.status(500).send({ message: "Server Error" })
@@ -64,11 +88,32 @@ router.get("/", async (req, res) => {
 
 // 게시물 태그별 조회
 router.get("/:tag", async (req, res) => {
+    const { tag } = req.params
+    const { page } = req.query
+    const { limit } = req.query
     try {
-        const tag = req.params.tag
+        // const results = await Article.find({ tag: tag, ...Article })
+        const totalArticle = await Article.countDocuments({
+            tag: tag,
+            ...Article,
+        })
 
-        const results = await Article.find({ tag: tag, ...Article })
-        return res.json(results).status(200)
+        let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
+            paging(page, totalArticle, limit)
+
+        const board = await Article.find({ tag: tag, ...Article })
+            .sort({ createAt: -1 })
+            .skip(hidePost)
+            .limit(postLimit)
+
+        res.json({
+            board,
+            pageNum,
+            startPage,
+            endPage,
+            postLimit,
+            totalPages,
+        }).status(200)
     } catch (e) {
         console.log("error: ", e)
         res.status(500).send({ message: "Server Error" })
