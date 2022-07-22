@@ -10,6 +10,27 @@ const verifyUser = require("./middlewares/authorization").verifyUser
 // 404 Not Found
 // 500 Internal Server Error
 
+/**
+ * postsLimit
+ * displayPages
+ * totalPosts
+ * 
+ * 
+ * prev = (startPage == 1) ? false : true
+ * next = (endPage == totalPages) ? false : true
+ * 
+ * totalPages = ( (totalPosts - 1) / postsLimit ) + 1
+ * 
+    int endPage = (((currentPage-1)/displayPageNum)+1) * displayPageNum;
+
+    if(totalPages < endPage) 
+        endPage = totalPages;
+ * startPage = ((currentPage-1)/displayPageNum) * displayPageNum + 1
+ *
+ * 
+ * 
+ */
+
 // 게시물 추가
 router.post("/", verifyUser, (req, res) => {
     let newArticle = new Article({
@@ -55,7 +76,6 @@ router.get("/:tag", async (req, res) => {
 })
 
 // 특정(_id) 게시물 조회
-// 이전글 다음글도 가져오는걸 여기서 구해야 하나,,,?
 router.get("/view/:id", async (req, res) => {
     const _id = req.params.id
 
@@ -69,11 +89,11 @@ router.get("/view/:id", async (req, res) => {
             date: { $lt: article.date },
         })
             .sort({ _id: -1 })
-            .limit(1);
+            .limit(1)
 
         await Article.findByIdAndUpdate(_id, {
             $set: { views: ++article.views },
-        }).exec();
+        }).exec()
 
         res.json({ article, next, prev }).status(200)
     } catch (e) {
@@ -92,17 +112,14 @@ router.patch("/:id", verifyUser, async (req, res) => {
         if (req.session.authorization != article.author)
             return res.status(401).send({ message: "No Permission" })
     } catch (e) {
-        console.log("error: ", e);
+        console.log("error: ", e)
         return res.status(500).send({ message: "Server Error" })
     }
 
     const article = Object.keys(req.body)
     const allowedUpdates = ["title", "content"] // 변경 가능한 것 (제목, 내용)
 
-    const isValid = article.every((update) =>
-
-        allowedUpdates.includes(update)
-    )
+    const isValid = article.every((update) => allowedUpdates.includes(update))
 
     if (!isValid) {
         return res.status(400).send({ message: "Cannot Update" })
@@ -146,7 +163,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
         }
         res.status(200).send({ message: "Success" })
     } catch (e) {
-        console.log("error: ", e);
+        console.log("error: ", e)
         res.status(500).send({ message: "Server Error" })
     }
 })
