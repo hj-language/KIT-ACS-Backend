@@ -5,11 +5,16 @@ const User = require("../schemas/user")
 router.post("/in", (req, res) => {
     if (req.session.authorization) {
         req.session.destroy(() => {
-            return res.status(400).json({ message: "Try again" })
+            res.status(400).json({ message: "Try again" })
         })
+        return
     }
 
     User.findOne({ id: req.body.id }, (e, user) => {
+        if (e) {
+            console.log("error: ", e)
+            res.status(500).send({ message: "Server Error" })
+        }
         if (!user || !user.verify) {
             return res.status(400).send({ message: "Invalid ID" })
         }

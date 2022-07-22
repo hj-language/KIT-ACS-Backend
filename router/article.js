@@ -35,7 +35,7 @@ const verifyUser = require("./middlewares/authorization").verifyUser
 router.post("/", verifyUser, (req, res) => {
     let newArticle = new Article({
         title: req.body.title,
-        author: req.session.author,
+        author: req.session.authorization,
         tag: req.body.tag,
         content: req.body.content,
         views: 0,
