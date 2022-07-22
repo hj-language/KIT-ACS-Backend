@@ -35,10 +35,10 @@ const port = 3000
 const routers = require("./router")
 app.use("/", routers)
 
-app.listen(port, "192.168.0.21", function () {
-    console.log(`Server Connected on ${port}.`)
-})
-
-// app.listen(port, function () {
+// app.listen(port, "192.168.0.21", function () {
 //     console.log(`Server Connected on ${port}.`)
 // })
+
+app.listen(port, function () {
+    console.log(`Server Connected on ${port}.`)
+})

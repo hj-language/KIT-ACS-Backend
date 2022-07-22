@@ -5,8 +5,9 @@ const User = require("../schemas/user")
 router.post("/in", (req, res) => {
     if (req.session.authorization) {
         req.session.destroy(() => {
-            return res.status(400).json({ message: "Try again" })
+            res.status(400).json({ message: "Try again" })
         })
+        return
     }
 
     User.findOne({ id: req.body.id }, (e, user) => {
@@ -19,8 +20,8 @@ router.post("/in", (req, res) => {
                 return res.status(400).send({ message: "Wrong ID or Password" })
             }
             req.session.authorization = user.id
-                (req.session.cookie.expires = new Date(Date.now() + 10 * 30000)), // 30초
-                res.status(200).send({ message: `Welcome! ${user.name}` })
+            req.session.cookie.expires = new Date(Date.now() + 10 * 30000) // 30초
+            res.status(200).send({ message: `Welcome! ${user.name}` })
         })
     })
 })

@@ -14,7 +14,7 @@ const verifyUser = require("./middlewares/authorization").verifyUser
 router.post("/", verifyUser, (req, res) => {
     let newArticle = new Article({
         title: req.body.title,
-        author: req.session.author,
+        author: req.session.authorization,
         tag: req.body.tag,
         content: req.body.content,
         views: 0,
@@ -56,7 +56,7 @@ router.get("/:tag", async (req, res) => {
 
 // 특정(_id) 게시물 조회
 // 이전글 다음글도 가져오는걸 여기서 구해야 하나,,,?
-router.get("/view/:id", async (req, res) => {
+router.get("/:id", async (req, res) => {
     const _id = req.params.id
 
     try {

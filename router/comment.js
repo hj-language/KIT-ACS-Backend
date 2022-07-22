@@ -6,52 +6,59 @@ const verifyUser = require("./middlewares/authorization").verifyUser
 
 
 //댓글 추가
-router.post("/:id", async (req, res) => {
+router.post("/:id", verifyUser, (req, res) => {
     const refId = req.params.id
-
 
     let newComment = new Comment({
         articleId: refId,
-        author: req.body.author,
+        author: req.session.authorization,
         content: req.body.content
     })
 
-    Article.findById(refId, (e, Doc) => {
-        //Docuument = Comment or Recomment
-        if (!Doc) {
-            //Documment = Recomment
-            if (article.recommentList == null) {
-                return res.status(404).send({ message: "This is Recomment" })
-            }
-            //Document = Comment
-            else {
-                newComment.save((e) => {
-                    if (e) {
-                        console.log("error: ", e)
-                        res.status(500).send({ message: "Server Error" })
-                    } else {
-                        res.status(200).send({ message: "Success" })
-                    }
-                })
+    Article.findById(refId, async (e, article) => {
+        if (e) {
+            console.log("error: ", e)
+            return res.status(500).send({ message: "Server Error" })
+        }
 
-                await Comment.findByIdAndUpdate(refId,
-                    { $push: { recommentList: newComment._id } }).exec()
-            }
+        //Document = Comment or Recomment
+        if (!article) {
+            Comment.findById(refId, async (e, comment) => {
+                //Documment = Recomment
+                if (comment.isRecomment) {
+                    return res.status(404).send({ message: "This is Recomment" })
+                }
+                //Document = Comment
+                else {
+                    newComment.save((e) => {
+                        if (e) {
+                            console.log("error: ", e)
+                            return res.status(500).send({ message: "Server Error" })
+                        } else {
+                            newComment.isRecomment = true
+                            await Comment.findByIdAndUpdate(refId,
+                                { $push: { recommentList: newComment._id } }).exec()
+
+                            res.status(200).send({ message: "Success" })
+                        }
+                    })
+                }
+            })
         }
         //Document = Article
         else {
             newComment.save((e) => {
                 if (e) {
                     console.log("error: ", e)
-                    res.status(500).send({ message: "Server Error" })
+                    return res.status(500).send({ message: "Server Error" })
                 } else {
+                    await Article.findByIdAndUpdate(refId,
+                        { $push: { commentList: newComment._id } }).exec()
                     res.status(200).send({ message: "Success" })
                 }
             })
 
-            newComment.recommentList = []
-            await Article.findByIdAndUpdate(refId,
-                { $push: { commentList: newComment._id } }).exec()
+
         }
     })
 
@@ -110,7 +117,7 @@ router.patch("/:id", async (req, res) => {
     }
 })
 
-// 게시물 삭제 (_id 기반)
+// 댓글 삭제 (_id 기반)
 router.delete("/:id", async (req, res) => {
     const _id = req.params.id
 

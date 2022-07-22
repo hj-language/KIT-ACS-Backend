@@ -34,6 +34,11 @@ let commentSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    isRecomment:
+    {
+        type: Boolean,
+        default: false,
+    },
     recommentList:
     {
         type: [mongoose.Schema.Types.ObjectId],
