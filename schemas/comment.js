@@ -29,7 +29,7 @@ let commentSchema = new Schema({
         type: Boolean,
         default: false,
     },
-    idDeleted:
+    isDeleted:
     {
         type: Boolean,
         default: false,

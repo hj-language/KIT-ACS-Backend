@@ -2,6 +2,7 @@ const express = require("express")
 const router = express.Router()
 const Comment = require("../schemas/comment")
 const Article = require("../schemas/article")
+const { callbackPromise } = require("nodemailer/lib/shared")
 const verifyUser = require("./middlewares/authorization").verifyUser
 
 
@@ -30,12 +31,12 @@ router.post("/:id", verifyUser, (req, res) => {
                 }
                 //Document = Comment
                 else {
-                    newComment.save((e) => {
+                    newComment.isRecomment = true
+                    newComment.save(async (e) => {
                         if (e) {
                             console.log("error: ", e)
                             return res.status(500).send({ message: "Server Error" })
                         } else {
-                            newComment.isRecomment = true
                             await Comment.findByIdAndUpdate(refId,
                                 { $push: { recommentList: newComment._id } }).exec()
 
@@ -47,7 +48,7 @@ router.post("/:id", verifyUser, (req, res) => {
         }
         //Document = Article
         else {
-            newComment.save((e) => {
+            newComment.save(async (e) => {
                 if (e) {
                     console.log("error: ", e)
                     return res.status(500).send({ message: "Server Error" })
@@ -104,7 +105,7 @@ router.patch("/:id", async (req, res) => {
     }
 
     try {
-        req.body.changed = true
+        req.body.isChanged = true
         const editedComment = await Comment.findByIdAndUpdate(_id, req.body)
 
         if (!editedComment) {
@@ -118,31 +119,66 @@ router.patch("/:id", async (req, res) => {
 })
 
 // 댓글 삭제 (_id 기반)
-router.delete("/:id", async (req, res) => {
-    const _id = req.params.id
+router.delete("/:id", verifyUser, async (req, res) => {
+    const refId = req.params.id
 
-    /*
+
     // 삭제 권한 조회
     try {
-        const comment = await Comment.findOne({ _id, ...Comment })
+        const comment = await Comment.findOne({ refId, ...Comment })
         if (req.session.authorization != comment.author)
             return res.status(401).send({ message: "No Permission" })
     } catch (e) {
         console.log("error: ", e)
         return res.status(500).send({ message: "Server Error" })
     }
-    */
 
-    try {
-        const deletedComment = await Comment.findByIdAndDelete(_id)
-        if (!deletedComment) {
-            return res.status(404).send({ message: "No Comment" })
+
+    Comment.findById(refId, async (e, comment) => {
+        if (e) {
+            console.log("error: ", e)
+            return res.status(500).send({ message: "Server Error" })
         }
-        res.status(200).send({ message: "Success" })
-    } catch (e) {
-        console.log("error: ", e);
-        res.status(500).send({ message: "Server Error" })
-    }
+
+        //is recomment
+        if (comment.isRecomment) {
+            try {
+                const deletedComment = await Comment.findByIdAndDelete(refId)
+                if (!deletedComment) {
+                    return res.status(404).send({ message: "No Comment" })
+                }
+                res.status(200).send({ message: "Success" })
+            } catch (e) {
+                console.log("error: ", e);
+                res.status(500).send({ message: "Server Error" })
+            }
+        }
+        else {
+            try {
+                //have recomment O
+                const recommentCnt = await Comment.where({ articleId: refId }).countDocuments();
+                console.log(recommentCnt)
+                if (recommentCnt != 0) {
+                    await Comment.findByIdAndUpdate(refId,
+                        { $set: { content: null } }).exec()
+                    await Comment.findByIdAndUpdate(refId,
+                        { $set: { isDeleted: true } }).exec()
+                    return res.status(200).send({ message: "This Comment have Recomments" })
+                }
+                //have recomment X
+                const deletedComment = await Comment.findByIdAndDelete(refId)
+                if (!deletedComment) {
+                    return res.status(404).send({ message: "No Comment" })
+                }
+                res.status(200).send({ message: "Success" })
+            } catch (e) {
+                console.log("error: ", e);
+                res.status(500).send({ message: "Server Error" })
+            }
+        }
+
+    })
+
 })
 
 module.exports = router
