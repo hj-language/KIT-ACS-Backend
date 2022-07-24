@@ -1,6 +1,7 @@
 const express = require("express")
 const router = express.Router()
 const Article = require("../schemas/article")
+const Comment = require("../schemas/comment")
 const verifyUser = require("./middlewares/authorization").verifyUser
 
 // Status Code
@@ -187,8 +188,11 @@ router.patch("/:id", verifyUser, async (req, res) => {
 // 게시물 삭제 (_id 기반)
 router.delete("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
+    await Comment.deleteMany()
+    //await Article.deleteMany()
+    console.log("asdfadsf")
 
-    // 삭제 권한 조회
+    //삭제 권한 조회
     try {
         const article = await Article.findOne({ _id, ...Article })
         if (req.session.authorization != article.author)
@@ -201,7 +205,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
     try {
         //연결된 comment들도 삭제 필요?
         //article.js에서 구현하는 건가?
-        /*const deletedCommentCnt = await Comment.deleteMany({ articleId: _id })*/
+        const deletedCommentCnt = await Comment.deleteMany({ articleId: _id })
         const deletedArticle = await Article.findByIdAndDelete(_id)
         if (!deletedArticle) {
             return res.status(404).send({ message: "No Post" })
