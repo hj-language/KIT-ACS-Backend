@@ -33,8 +33,8 @@ router.post("/", verifyUser, (req, res) => {
 
 const paging = (page, totalArticle, limit) => {
     page = parseInt(page)
-    limit = parseInt(limit)
     totalArticle = parseInt(totalArticle)
+    limit = parseInt(limit)
 
     let pageNum = page || 1
     let postLimit = limit || 20
@@ -68,13 +68,13 @@ router.get("/", async (req, res) => {
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalArticle, limit)
 
-        const board = await Article.find({})
+        const articles = await Article.find({})
             .sort({ createAt: -1 })
             .skip(hidePost)
             .limit(postLimit)
 
         res.json({
-            board,
+            articles,
             pageNum,
             startPage,
             endPage,
@@ -102,13 +102,13 @@ router.get("/:tag", async (req, res) => {
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalArticle, limit)
 
-        const board = await Article.find({ tag: tag, ...Article })
+        const articles = await Article.find({ tag: tag, ...Article })
             .sort({ createAt: -1 })
             .skip(hidePost)
             .limit(postLimit)
 
         res.json({
-            board,
+            articles,
             pageNum,
             startPage,
             endPage,
@@ -148,25 +148,32 @@ router.get("/view/:id", async (req, res) => {
     }
 })
 
+const checkPermission = async (articleId, userId) => {
+    try {
+        const article = await Article.findOne({ articleId, ...Article })
+        if (userId != article.author) {
+            res.status(401).send({ message: "No Permission" })
+            return false
+        }
+    } catch (e) {
+        console.log("error: ", e)
+        res.status(500).send({ message: "Server Error" })
+        return false
+    }
+    return true
+}
+
 // 게시물 update (_id 기반)
 router.patch("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
 
     // 수정 권한 조회
-    try {
-        const article = await Article.findOne({ _id, ...Article })
-        if (req.session.authorization != article.author)
-            return res.status(401).send({ message: "No Permission" })
-    } catch (e) {
-        console.log("error: ", e)
-        return res.status(500).send({ message: "Server Error" })
-    }
+    if (!checkPermission(_id, req.session.authorization)) return
 
     const article = Object.keys(req.body)
     const allowedUpdates = ["title", "content"] // 변경 가능한 것 (제목, 내용)
 
     const isValid = article.every((update) => allowedUpdates.includes(update))
-
     if (!isValid) {
         return res.status(400).send({ message: "Cannot Update" })
     }
@@ -188,23 +195,11 @@ router.patch("/:id", verifyUser, async (req, res) => {
 // 게시물 삭제 (_id 기반)
 router.delete("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
-    await Comment.deleteMany()
-    //await Article.deleteMany()
-    console.log("asdfadsf")
 
     //삭제 권한 조회
-    try {
-        const article = await Article.findOne({ _id, ...Article })
-        if (req.session.authorization != article.author)
-            return res.status(401).send({ message: "No Permission" })
-    } catch (e) {
-        console.log("error: ", e)
-        return res.status(500).send({ message: "Server Error" })
-    }
+    if (!checkPermission(_id, req.session.authorization)) return
 
     try {
-        //연결된 comment들도 삭제 필요?
-        //article.js에서 구현하는 건가?
         const deletedCommentCnt = await Comment.deleteMany({ articleId: _id })
         const deletedArticle = await Article.findByIdAndDelete(_id)
         if (!deletedArticle) {
