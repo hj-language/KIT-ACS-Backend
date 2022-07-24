@@ -2,7 +2,7 @@ const express = require("express")
 const router = express.Router()
 const Article = require("../schemas/article")
 const Comment = require("../schemas/comment")
-const verifyUser = require("./middlewares/authorization").verifyUser
+const { verifyUser, checkPermission } = require("./middlewares/authorization");
 
 // Status Code
 // 400 Bad Request
@@ -44,15 +44,14 @@ const paging = (page, totalArticle, limit) => {
     const startPage = Math.floor((pageNum - 1) / pagination) * pagination + 1
     let endPage = startPage + pagination - 1
 
-    if (pageNum > totalPages) {
+    if (pageNum > totalPages)
         pageNum = totalPages
-    }
-    if (endPage > totalPages) {
+    
+    if (endPage > totalPages)
         endPage = totalPages
-    }
-    if (totalPages === 0) {
+    
+    if (totalPages === 0) 
         endPage = 1
-    }
 
     return { startPage, endPage, hidePost, postLimit, totalPages, pageNum }
 }
@@ -62,7 +61,6 @@ router.get("/", async (req, res) => {
     const { page } = req.query
     const { limit } = req.query
     try {
-        // const articles = await Article.find({ ...Article })
         const totalArticle = await Article.countDocuments({})
 
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
@@ -93,7 +91,6 @@ router.get("/:tag", async (req, res) => {
     const { page } = req.query
     const { limit } = req.query
     try {
-        // const results = await Article.find({ tag: tag, ...Article })
         const totalArticle = await Article.countDocuments({
             tag: tag,
             ...Article,
@@ -148,27 +145,12 @@ router.get("/view/:id", async (req, res) => {
     }
 })
 
-const checkPermission = async (articleId, userId) => {
-    try {
-        const article = await Article.findOne({ articleId, ...Article })
-        if (userId != article.author) {
-            res.status(401).send({ message: "No Permission" })
-            return false
-        }
-    } catch (e) {
-        console.log("error: ", e)
-        res.status(500).send({ message: "Server Error" })
-        return false
-    }
-    return true
-}
-
 // 게시물 update (_id 기반)
 router.patch("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
 
     // 수정 권한 조회
-    if (!checkPermission(_id, req.session.authorization)) return
+    if (!checkPermission(_id, req.session.authorization, Article)) return
 
     const article = Object.keys(req.body)
     const allowedUpdates = ["title", "content"] // 변경 가능한 것 (제목, 내용)
@@ -197,7 +179,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
 
     //삭제 권한 조회
-    if (!checkPermission(_id, req.session.authorization)) return
+    if (!checkPermission(_id, req.session.authorization, Article)) return
 
     try {
         const deletedCommentCnt = await Comment.deleteMany({ articleId: _id })

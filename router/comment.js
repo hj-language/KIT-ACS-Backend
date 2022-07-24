@@ -1,8 +1,8 @@
 const express = require("express")
 const router = express.Router()
-const Comment = require("../schemas/comment")
 const Article = require("../schemas/article")
-const verifyUser = require("./middlewares/authorization").verifyUser
+const Comment = require("../schemas/comment")
+const { verifyUser, checkPermission } = require("./middlewares/authorization");
 
 //댓글 추가
 router.post("/:id", verifyUser, (req, res) => {
@@ -74,27 +74,12 @@ router.get("/:id", async (req, res) => {
     }
 })
 
-const checkPermission = async (commentId, userId) => {
-    try {
-        const comment = await Comment.findOne({ commentId, ...Comment })
-        if (userId != comment.author) {
-            res.status(401).send({ message: "No Permission" })
-            return false
-        }
-    } catch (e) {
-        console.log("error: ", e)
-        res.status(500).send({ message: "Server Error" })
-        return false
-    }
-    return true
-}
-
 // 댓글 update (_id 기반)
 router.patch("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
 
     // 수정 권한 조회
-    if (!checkPermission(_id, req.session.authorization)) return
+    if (!checkPermission(_id, req.session.authorization, Comment)) return
 
     const comment = Object.keys(req.body)
     const allowedUpdates = ["content"]
@@ -125,7 +110,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
 
     // 삭제 권한 조회
-    if (!checkPermission(_id, req.session.authorization)) return
+    if (!checkPermission(_id, req.session.authorization, Comment)) return
 
     Comment.findById(_id, async (e, comment) => {
         if (e) {
