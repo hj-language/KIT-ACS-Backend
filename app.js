@@ -2,7 +2,10 @@ const express = require("express")
 const cors = require("cors")
 const app = express()
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin: "*",
+    credential: "true"
+}))
 
 const session = require("express-session")
 const redisStore = require("connect-redis")(session)
