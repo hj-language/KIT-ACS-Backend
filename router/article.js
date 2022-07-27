@@ -2,6 +2,9 @@ const express = require("express")
 const router = express.Router()
 const Article = require("../schemas/article")
 const Comment = require("../schemas/comment")
+const File = require("../schemas/file")
+const multer = require("multer")
+const upload = multer({ dest: 'uploadFiles/'})
 const { verifyUser, checkPermission } = require("./middlewares/authorization");
 
 // Status Code
@@ -12,23 +15,37 @@ const { verifyUser, checkPermission } = require("./middlewares/authorization");
 // 500 Internal Server Error
 
 // 게시물 추가
-router.post("/", verifyUser, (req, res) => {
-    let newArticle = new Article({
-        title: req.body.title,
-        author: req.session.authorization,
-        tag: req.body.tag,
-        content: req.body.content,
-        views: 0,
-    })
+router.post("/", verifyUser, upload.array('attach'), async (req, res) => {
+    try {
+        let newArticle = new Article({
+            title: req.body.title,
+            author: req.session.authorization,
+            tag: req.body.tag,
+            content: req.body.content,
+            views: 0,
+        })
 
-    newArticle.save((e) => {
-        if (e) {
-            console.log("error: ", e)
-            res.status(500).send({ message: "Server Error" })
-        } else {
-            res.status(200).send({ message: "Success" })
-        }
-    })
+        console.log(req.files);
+        
+        // 파일 저장은 되지만 여러 파일이 들어오면 
+        // 파일별로 다 File 인스턴스 만들고 
+        // Article의 fileList에 넣어줘야 함
+
+        // let newFile = new File({
+        //     articleId: newArticle._id,
+        //     size: req.file.size,
+        //     originName: req.file.originalname,
+        //     newName: req.file.filename
+        // })
+        // newArticle.fileList = [newFile._id]
+
+        await newArticle.save()
+        // await newFile.save()
+        res.status(200).send({ message: "Success" })
+    } catch (e) {
+        console.log("error: ", e)
+        res.status(500).send({ message: "Server Error" })
+    }
 })
 
 const paging = (page, totalArticle, limit) => {
