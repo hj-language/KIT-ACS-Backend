@@ -1,6 +1,9 @@
 # node_modules 폴더
 node_modules
 
+# 첨부파일들
+uploadFiles
+
 # 공개하면 안 되는 파일
 secret.js
 .env
