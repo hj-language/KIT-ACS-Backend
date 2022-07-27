@@ -2,7 +2,8 @@ const express = require("express")
 const router = express.Router()
 const Article = require("../schemas/article")
 const Comment = require("../schemas/comment")
-const { verifyUser, checkPermission } = require("./middlewares/authorization");
+const User = require("../schemas/user")
+const { verifyUser, checkPermission } = require("./middlewares/authorization")
 
 // Status Code
 // 400 Bad Request
@@ -44,14 +45,11 @@ const paging = (page, totalArticle, limit) => {
     const startPage = Math.floor((pageNum - 1) / pagination) * pagination + 1
     let endPage = startPage + pagination - 1
 
-    if (pageNum > totalPages)
-        pageNum = totalPages
-    
-    if (endPage > totalPages)
-        endPage = totalPages
-    
-    if (totalPages === 0) 
-        endPage = 1
+    if (pageNum > totalPages) pageNum = totalPages
+
+    if (endPage > totalPages) endPage = totalPages
+
+    if (totalPages === 0) endPage = 1
 
     return { startPage, endPage, hidePost, postLimit, totalPages, pageNum }
 }
@@ -124,6 +122,11 @@ router.get("/view/:id", async (req, res) => {
 
     try {
         const article = await Article.findOne({ _id, ...Article })
+        const authorName = await User.findOne({ id: article.author })
+
+        const name = { authorName: authorName.name }
+
+        const articleInfo = Object.assign(name, article._doc)
 
         const next = await Article.find({
             date: { $gt: article.date },
@@ -138,7 +141,7 @@ router.get("/view/:id", async (req, res) => {
             $set: { views: ++article.views },
         }).exec()
 
-        res.json({ article, next, prev }).status(200)
+        res.json({ articleInfo, next, prev }).status(200)
     } catch (e) {
         console.log("error: ", e)
         res.status(404).send({ message: "No Post" })
@@ -153,7 +156,7 @@ router.patch("/:id", verifyUser, async (req, res) => {
     if (!checkPermission(_id, req.session.authorization, Article)) return
 
     const article = Object.keys(req.body)
-    const allowedUpdates = ["title", "content"] // 변경 가능한 것 (제목, 내용)
+    const allowedUpdates = ["title", "content", "tag"] // 변경 가능한 것
 
     const isValid = article.every((update) => allowedUpdates.includes(update))
     if (!isValid) {
