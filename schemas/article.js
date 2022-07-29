@@ -28,11 +28,16 @@ let articleSchema = new Schema({
         type: Number,
         required: true
     },
-
     commentList:
     {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'comment',
+        default: null
+    },
+    fileList:
+    {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'file',
         default: null
     }
 
