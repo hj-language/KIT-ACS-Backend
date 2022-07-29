@@ -5,7 +5,7 @@ const Comment = require("../schemas/comment")
 const User = require("../schemas/user")
 const File = require("../schemas/file")
 const multer = require("multer")
-const upload = multer({ dest: 'uploadFiles/'})
+const upload = multer({ dest: "uploadFiles/" })
 const { verifyUser, checkPermission } = require("./middlewares/authorization")
 
 // Status Code
@@ -16,7 +16,7 @@ const { verifyUser, checkPermission } = require("./middlewares/authorization")
 // 500 Internal Server Error
 
 // 게시물 추가
-router.post("/", verifyUser, upload.array('attach'), async (req, res) => {
+router.post("/", verifyUser, upload.array("attach"), async (req, res) => {
     try {
         let newArticle = new Article({
             title: req.body.title,
@@ -32,7 +32,7 @@ router.post("/", verifyUser, upload.array('attach'), async (req, res) => {
                 articleId: newArticle._id,
                 size: file.size,
                 originName: file.originalname,
-                newName: file.filename
+                newName: file.filename,
             })
             newArticle.fileList.push(newFile._id)
             await newFile.save()
@@ -77,11 +77,22 @@ router.get("/", async (req, res) => {
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalArticle, limit)
 
-        const articles = await Article.find({})
+        const articles_ = await Article.find({})
             .sort({ createAt: -1 })
             .skip(hidePost)
             .limit(postLimit)
 
+        const articles = await Promise.all(
+            articles_.map(async (article) => {
+                const authorName = await User.findOne({
+                    id: article.author,
+                })
+                const _name = authorName.name
+                const name = { authorName: _name }
+                const articleInfo = Object.assign(name, article._doc)
+                return articleInfo
+            })
+        )
         res.json({
             articles,
             pageNum,
@@ -110,11 +121,22 @@ router.get("/:tag", async (req, res) => {
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalArticle, limit)
 
-        const articles = await Article.find({ tag: tag, ...Article })
+        const articles_ = await Article.find({ tag: tag, ...Article })
             .sort({ createAt: -1 })
             .skip(hidePost)
             .limit(postLimit)
 
+        const articles = await Promise.all(
+            articles_.map(async (article) => {
+                const authorName = await User.findOne({
+                    id: article.author,
+                })
+                const _name = authorName.name
+                const name = { authorName: _name }
+                const articleInfo = Object.assign(name, article._doc)
+                return articleInfo
+            })
+        )
         res.json({
             articles,
             pageNum,
@@ -136,23 +158,53 @@ router.get("/view/:id", async (req, res) => {
     try {
         const article = await Article.findOne({ _id, ...Article })
         const authorName = await User.findOne({ id: article.author })
-
         const name = { authorName: authorName.name }
-
         const articleInfo = Object.assign(name, article._doc)
 
-        const next = await Article.find({
+        const next_ = await Article.find({
             date: { $gt: article.date },
         }).limit(1)
-        const prev = await Article.find({
+
+        const prev_ = await Article.find({
             date: { $lt: article.date },
         })
             .sort({ _id: -1 })
             .limit(1)
 
+        const next = await Promise.all(
+            next_.map(async (article) => {
+                const authorName = await User.findOne({
+                    id: article.author,
+                })
+                const _name = authorName.name
+                const name = { authorName: _name }
+                const articleInfo = Object.assign(name, article._doc)
+                return articleInfo
+            })
+        )
+
+        const prev = await Promise.all(
+            prev_.map(async (article) => {
+                const authorName = await User.findOne({
+                    id: article.author,
+                })
+                const _name = authorName.name
+                const name = { authorName: _name }
+                const articleInfo = Object.assign(name, article._doc)
+                return articleInfo
+            })
+        )
+
         await Article.findByIdAndUpdate(_id, {
             $set: { views: ++article.views },
         }).exec()
+
+        // 어캐 쓰는지 모르겠다,,,,ㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠ
+        // await User.findOne({ id: article.author })
+        //     .populate("name")
+        //     .then((name) => {
+        //         res.json({ article, name, next, prev }).status(200)
+        //     })
 
         res.json({ articleInfo, next, prev }).status(200)
     } catch (e) {

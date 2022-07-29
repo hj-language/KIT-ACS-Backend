@@ -15,22 +15,21 @@ const saltFactor = require("../secret.js").saltFactor
 
 // 마이페이지 접속
 router.get("/", verifyUser, async (req, res) => {
-    const user = await User.findOne({ id: req.session.authorization });
+    const user = await User.findOne({ id: req.session.authorization })
     if (!user) {
         return res.status(403).send({ message: "Forbidden" })
     }
 
     try {
-        Article.find({ author: mypage.id }, (e, article) => {
+        Article.find({ author: user.id }, (e, article) => {
             if (e) {
                 console.log("error: ", e)
                 res.status(500).send({ message: "Server Error" })
-            }
-            else {
+            } else {
                 const userMypage = {
-                    id: mypage.id,
-                    name: mypage.name,
-                    email: mypage.webmail,
+                    id: user.id,
+                    name: user.name,
+                    email: user.webmail,
                     article: article,
                 }
                 res.status(200).json(userMypage)
