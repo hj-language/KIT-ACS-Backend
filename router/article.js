@@ -22,25 +22,21 @@ router.post("/", verifyUser, upload.array('attach'), async (req, res) => {
             author: req.session.authorization,
             tag: req.body.tag,
             content: req.body.content,
+            fileList: [],
             views: 0,
         })
 
-        console.log(req.files);
-        
-        // 파일 저장은 되지만 여러 파일이 들어오면 
-        // 파일별로 다 File 인스턴스 만들고 
-        // Article의 fileList에 넣어줘야 함
-
-        // let newFile = new File({
-        //     articleId: newArticle._id,
-        //     size: req.file.size,
-        //     originName: req.file.originalname,
-        //     newName: req.file.filename
-        // })
-        // newArticle.fileList = [newFile._id]
-
+        req.files.forEach(async (file) => {
+            let newFile = new File({
+                articleId: newArticle._id,
+                size: file.size,
+                originName: file.originalname,
+                newName: file.filename
+            })
+            newArticle.fileList.push(newFile._id)
+            await newFile.save()
+        })
         await newArticle.save()
-        // await newFile.save()
         res.status(200).send({ message: "Success" })
     } catch (e) {
         console.log("error: ", e)
