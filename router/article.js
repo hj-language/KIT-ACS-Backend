@@ -6,6 +6,7 @@ const User = require("../schemas/user")
 const File = require("../schemas/file")
 const multer = require("multer")
 const upload = multer({ dest: "uploadFiles/" })
+const fs = require("fs")
 const { verifyUser, checkPermission } = require("./middlewares/authorization")
 
 // Status Code
@@ -29,10 +30,14 @@ router.post("/", verifyUser, upload.array("attach"), async (req, res) => {
 
     try {
         let newArticle = new Article({
-            title: req.body.title,
+            // title: req.body.title,
+            // author: req.session.authorization,
+            // tag: req.body.tag,
+            // content: req.body.content,
+            title: 1,
             author: req.session.authorization,
-            tag: req.body.tag,
-            content: req.body.content,
+            tag: 2,
+            content: 3,
             fileList: [],
             views: 0,
         })
@@ -261,7 +266,14 @@ router.delete("/:id", verifyUser, async (req, res) => {
     if (!await checkPermission(req, res, _id, Article)) return
 
     try {
-        const deletedCommentCnt = await Comment.deleteMany({ articleId: _id })
+        await Comment.deleteMany({ articleId: _id })
+        const files = await File.find({ articleId: _id })
+        files.forEach((file) => {
+            fs.unlink("uploadfiles/"+file.newName, (e) => {
+                if (e) console.log("error: ", e)
+            })
+        })
+        await File.deleteMany({ articleId: _id })
         const deletedArticle = await Article.findByIdAndDelete(_id)
         if (!deletedArticle) {
             return res.status(404).send({ message: "No Post" })
