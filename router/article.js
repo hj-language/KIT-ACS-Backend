@@ -23,21 +23,17 @@ const isUserClassOne = async (id) => {
 }
 
 // 게시물 추가
-router.post("/", verifyUser, upload.array("attach"), async (req, res) => {
+router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
     if (req.body.tag === "notice" && await isUserClassOne(req.session.authorization)) {
         return res.status(401).send({ message: "No Permission" })
     }
 
     try {
         let newArticle = new Article({
-            // title: req.body.title,
-            // author: req.session.authorization,
-            // tag: req.body.tag,
-            // content: req.body.content,
-            title: 1,
+            title: req.body.title,
             author: req.session.authorization,
-            tag: 2,
-            content: 3,
+            tag: req.body.tag,
+            content: req.body.content,
             fileList: [],
             views: 0,
         })
@@ -77,9 +73,7 @@ const paging = (page, totalArticle, limit) => {
     let endPage = startPage + pagination - 1
 
     if (pageNum > totalPages) pageNum = totalPages
-
     if (endPage > totalPages) endPage = totalPages
-
     if (totalPages === 0) endPage = 1
 
     return { startPage, endPage, hidePost, postLimit, totalPages, pageNum }
@@ -102,9 +96,7 @@ router.get("/", async (req, res) => {
 
         const articles = await Promise.all(
             articles_.map(async (article) => {
-                const authorName = await User.findOne({
-                    id: article.author,
-                })
+                const authorName = await User.findOne({ id: article.author })
                 const _name = authorName.name
                 const name = { authorName: _name }
                 const articleInfo = Object.assign(name, article._doc)
@@ -112,12 +104,7 @@ router.get("/", async (req, res) => {
             })
         )
         res.json({
-            articles,
-            pageNum,
-            startPage,
-            endPage,
-            postLimit,
-            totalPages,
+            articles, pageNum, startPage, endPage, postLimit, totalPages,
         }).status(200)
     } catch (e) {
         console.log("error: ", e)
@@ -131,10 +118,7 @@ router.get("/:tag", async (req, res) => {
     const { page } = req.query
     const { limit } = req.query
     try {
-        const totalArticle = await Article.countDocuments({
-            tag: tag,
-            ...Article,
-        })
+        const totalArticle = await Article.countDocuments({ tag: tag, ...Article, })
 
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalArticle, limit)
@@ -146,22 +130,15 @@ router.get("/:tag", async (req, res) => {
 
         const articles = await Promise.all(
             articles_.map(async (article) => {
-                const authorName = await User.findOne({
-                    id: article.author,
-                })
+                const authorName = await User.findOne({ id: article.author, })
                 const _name = authorName.name
                 const name = { authorName: _name }
                 const articleInfo = Object.assign(name, article._doc)
                 return articleInfo
             })
         )
-        res.json({
-            articles,
-            pageNum,
-            startPage,
-            endPage,
-            postLimit,
-            totalPages,
+        res.json({ 
+            articles, pageNum, startPage, endPage, postLimit, totalPages,
         }).status(200)
     } catch (e) {
         console.log("error: ", e)
@@ -217,13 +194,6 @@ router.get("/view/:id", async (req, res) => {
             $set: { views: ++article.views },
         }).exec()
 
-        // 어캐 쓰는지 모르겠다,,,,ㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠ
-        // await User.findOne({ id: article.author })
-        //     .populate("name")
-        //     .then((name) => {
-        //         res.json({ article, name, next, prev }).status(200)
-        //     })
-
         res.json({ articleInfo, next, prev }).status(200)
     } catch (e) {
         console.log("error: ", e)
@@ -232,18 +202,50 @@ router.get("/view/:id", async (req, res) => {
 })
 
 // 게시물 update (_id 기반)
-router.patch("/:id", verifyUser, async (req, res) => {
+router.patch("/:id", verifyUser, upload.array("fileList"), async (req, res) => {
     const _id = req.params.id
 
     // 수정 권한 조회
     if (!await checkPermission(req, res, _id, Article)) return
 
-    const article = Object.keys(req.body)
-    const allowedUpdates = ["title", "content", "tag"] // 변경 가능한 것
-
-    const isValid = article.every((update) => allowedUpdates.includes(update))
+    const updateKeys = Object.keys(req.body)
+    const allowedKeys = ["title", "content", "tag", "fileList"] // 변경 가능한 것
+    const isValid = updateKeys.every((key) => allowedKeys.includes(key))
     if (!isValid) {
         return res.status(400).send({ message: "Cannot Update" })
+    }
+
+    const multipartType = 'multipart/form-data'
+
+    // type == multipart    => 기존 파일 삭제
+    if (multipartType == req.headers['content-type'].slice(0, multipartType.length)) {
+        const newFileList = new Array()
+
+        // Delete File
+        const files = await File.find({ articleId: _id })
+        files.forEach((file) => {
+            fs.unlink("uploadfiles/"+file.newName, (e) => {
+                if (e) console.log("error: ", e)
+                else console.log(file.newName + "success")
+            })
+        })
+        await File.deleteMany({ articleId: _id })
+
+        // file O          => 들어온 파일 모두 저장
+        if (req.files.length != 0) {
+            req.files.forEach(async (file) => {
+                let newFile = new File({
+                    articleId: _id,
+                    size: file.size,
+                    originName: file.originalname,
+                    newName: file.filename,
+                })
+                newFileList.push(newFile._id)
+                await newFile.save()
+            })
+        }
+        
+        req.body.fileList = newFileList
     }
 
     try {
