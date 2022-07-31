@@ -7,6 +7,7 @@ const File = require("../schemas/file")
 const multer = require("multer")
 const upload = multer({ dest: "uploadFiles/" })
 const { verifyUser, checkPermission } = require("./middlewares/authorization")
+const { findById, findByIdAndDelete, deleteMany } = require("../schemas/comment")
 
 // Status Code
 // 400 Bad Request
@@ -27,16 +28,16 @@ router.post("/", verifyUser, upload.array("attach"), async (req, res) => {
             views: 0,
         })
 
-        req.files.forEach(async (file) => {
-            let newFile = new File({
-                articleId: newArticle._id,
-                size: file.size,
-                originName: file.originalname,
-                newName: file.filename,
-            })
-            newArticle.fileList.push(newFile._id)
-            await newFile.save()
-        })
+        // req.files.forEach(async (file) => {
+        //     let newFile = new File({
+        //         articleId: newArticle._id,
+        //         size: file.size,
+        //         originName: file.originalname,
+        //         newName: file.filename,
+        //     })
+        //     newArticle.fileList.push(newFile._id)
+        //     await newFile.save()
+        // })
         await newArticle.save()
         res.status(200).send({ message: "Success" })
     } catch (e) {
@@ -250,11 +251,26 @@ router.delete("/:id", verifyUser, async (req, res) => {
     if (!checkPermission(_id, req.session.authorization, Article)) return
 
     try {
-        const deletedCommentCnt = await Comment.deleteMany({ articleId: _id })
+        //Delete Recomment
+        Article.findById(_id, async (e, article) => {
+            article.commentList.forEach(async (curCmt, index) => {
+                await Comment.deleteMany({ articleId: curCmt })
+            })
+        })
+
+        //Delete Comment
+        await Comment.deleteMany({ articleId: _id })
+
+        //Delete File
+        await File.deleteMany({ articleId: _id })
+
+        //Delete Article
         const deletedArticle = await Article.findByIdAndDelete(_id)
+
         if (!deletedArticle) {
             return res.status(404).send({ message: "No Post" })
         }
+
         res.status(200).send({ message: "Success" })
     } catch (e) {
         console.log("error: ", e)
