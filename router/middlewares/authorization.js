@@ -11,7 +11,7 @@ const checkPermission = async (req, res, refId, model) => { // model is Article 
     if (req.session.authorization === "admin") return true
     try {
         const doc = await model.findOne({ refId, ...model })
-        if (req.session.authroization != doc.author) {
+        if (req.session.authorization != doc.author) {
             res.status(401).send({ message: "No Permission" })
             return false
         }
