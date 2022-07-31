@@ -18,6 +18,11 @@ let userSchema = new Schema(
             type: String,
             required: true,
         },
+        class: {
+            type: Number,
+            required: true,
+            default: 1
+        },
         webmail: {
             type: String,
             required: true,

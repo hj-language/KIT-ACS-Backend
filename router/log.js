@@ -29,10 +29,15 @@ router.get("/in", (req, res) => {
 router.post("/in", (req, res) => {
     if (req.session.authorization) {
         req.session.destroy((e) => {
-            console.log("error: ", e)
-            res.status(500).send({ message: "Server Error" })
+            if (e) {
+                console.log("error: ", e)
+                res.status(500).send({ message: "Server Error" })
+            }
+            else {
+                res.status(400).json({ message: "Try again" })
+            }
         })
-        return res.status(400).json({ message: "Try again" })
+        return
     }
 
     User.findOne({ id: req.body.id }, (e, user) => {

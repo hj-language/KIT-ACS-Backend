@@ -6,8 +6,8 @@ const User = require("../schemas/user")
 const File = require("../schemas/file")
 const multer = require("multer")
 const upload = multer({ dest: "uploadFiles/" })
+const fs = require("fs")
 const { verifyUser, checkPermission } = require("./middlewares/authorization")
-const { findById, findByIdAndDelete, deleteMany } = require("../schemas/comment")
 
 // Status Code
 // 400 Bad Request
@@ -16,28 +16,45 @@ const { findById, findByIdAndDelete, deleteMany } = require("../schemas/comment"
 // 404 Not Found
 // 500 Internal Server Error
 
+const isUserClassOne = async (id) => {
+    const user = await User.findOne({ id: id })
+    if (user.class === 1) return true
+    return false
+}
+
 // 게시물 추가
 router.post("/", verifyUser, upload.array("attach"), async (req, res) => {
+    if (req.body.tag === "notice" && await isUserClassOne(req.session.authorization)) {
+        return res.status(401).send({ message: "No Permission" })
+    }
+
     try {
         let newArticle = new Article({
-            title: req.body.title,
+            // title: req.body.title,
+            // author: req.session.authorization,
+            // tag: req.body.tag,
+            // content: req.body.content,
+            title: 1,
             author: req.session.authorization,
-            tag: req.body.tag,
-            content: req.body.content,
+            tag: 2,
+            content: 3,
             fileList: [],
             views: 0,
         })
 
-        // req.files.forEach(async (file) => {
-        //     let newFile = new File({
-        //         articleId: newArticle._id,
-        //         size: file.size,
-        //         originName: file.originalname,
-        //         newName: file.filename,
-        //     })
-        //     newArticle.fileList.push(newFile._id)
-        //     await newFile.save()
-        // })
+        if (req.files) {
+            req.files.forEach(async (file) => {
+                let newFile = new File({
+                    articleId: newArticle._id,
+                    size: file.size,
+                    originName: file.originalname,
+                    newName: file.filename,
+                })
+                newArticle.fileList.push(newFile._id)
+                await newFile.save()
+            })
+        }
+        
         await newArticle.save()
         res.status(200).send({ message: "Success" })
     } catch (e) {
@@ -219,7 +236,7 @@ router.patch("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
 
     // 수정 권한 조회
-    if (!checkPermission(_id, req.session.authorization, Article)) return
+    if (!await checkPermission(req, res, _id, Article)) return
 
     const article = Object.keys(req.body)
     const allowedUpdates = ["title", "content", "tag"] // 변경 가능한 것
@@ -248,11 +265,15 @@ router.delete("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
 
     //삭제 권한 조회
-    if (!checkPermission(_id, req.session.authorization, Article)) return
+    if (!await checkPermission(req, res, _id, Article)) return
 
     try {
         //Delete Recomment
         Article.findById(_id, async (e, article) => {
+            if (e) {
+                console.log("error: ", e)
+                return
+            }
             article.commentList.forEach(async (curCmt, index) => {
                 await Comment.deleteMany({ articleId: curCmt })
             })
@@ -262,6 +283,12 @@ router.delete("/:id", verifyUser, async (req, res) => {
         await Comment.deleteMany({ articleId: _id })
 
         //Delete File
+        const files = await File.find({ articleId: _id })
+        files.forEach((file) => {
+            fs.unlink("uploadfiles/"+file.newName, (e) => {
+                if (e) console.log("error: ", e)
+            })
+        })
         await File.deleteMany({ articleId: _id })
 
         //Delete Article
