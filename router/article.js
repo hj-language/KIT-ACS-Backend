@@ -22,6 +22,29 @@ const isUserClassOne = async (id) => {
     return false
 }
 
+const addFiles = (articleId, files, list) => {
+    files.forEach(async (file) => {
+        let newFile = new File({
+            articleId: articleId,
+            size: file.size,
+            originName: file.originalname,
+            newName: file.filename,
+        })
+        list.push(newFile._id)
+        await newFile.save()
+    })
+}
+
+const deleteFiles = async (articleId) => {
+    const files = await File.find({ articleId: articleId })
+    files.forEach((file) => {
+        fs.unlink("uploadfiles/"+file.newName, (e) => {
+            if (e) console.log("error: ", e)
+        })
+    })
+    await File.deleteMany({ articleId: articleId })
+}
+
 // 게시물 추가
 router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
     if (req.body.tag === "notice" && await isUserClassOne(req.session.authorization)) {
@@ -37,21 +60,11 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
             fileList: [],
             views: 0,
         })
-
-        if (req.files) {
-            req.files.forEach(async (file) => {
-                let newFile = new File({
-                    articleId: newArticle._id,
-                    size: file.size,
-                    originName: file.originalname,
-                    newName: file.filename,
-                })
-                newArticle.fileList.push(newFile._id)
-                await newFile.save()
-            })
-        }
+        
+        if (req.files) await addFiles(newArticle._id, req.files, newArticle.fileList)
         
         await newArticle.save()
+
         res.status(200).send({ message: "Success" })
     } catch (e) {
         console.log("error: ", e)
@@ -222,29 +235,11 @@ router.patch("/:id", verifyUser, upload.array("fileList"), async (req, res) => {
         const newFileList = new Array()
 
         // Delete File
-        const files = await File.find({ articleId: _id })
-        files.forEach((file) => {
-            fs.unlink("uploadfiles/"+file.newName, (e) => {
-                if (e) console.log("error: ", e)
-                else console.log(file.newName + "success")
-            })
-        })
-        await File.deleteMany({ articleId: _id })
+        await deleteFiles(_id)
 
         // file O          => 들어온 파일 모두 저장
-        if (req.files.length != 0) {
-            req.files.forEach(async (file) => {
-                let newFile = new File({
-                    articleId: _id,
-                    size: file.size,
-                    originName: file.originalname,
-                    newName: file.filename,
-                })
-                newFileList.push(newFile._id)
-                await newFile.save()
-            })
-        }
-        
+        if (req.files.length != 0) await addFiles(_id, req.files, newFileList)
+
         req.body.fileList = newFileList
     }
 
@@ -285,13 +280,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
         await Comment.deleteMany({ articleId: _id })
 
         //Delete File
-        const files = await File.find({ articleId: _id })
-        files.forEach((file) => {
-            fs.unlink("uploadfiles/"+file.newName, (e) => {
-                if (e) console.log("error: ", e)
-            })
-        })
-        await File.deleteMany({ articleId: _id })
+        await deleteFiles(_id)
 
         //Delete Article
         const deletedArticle = await Article.findByIdAndDelete(_id)
