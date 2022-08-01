@@ -4,6 +4,7 @@ const Article = require("../schemas/article")
 const Comment = require("../schemas/comment")
 const User = require("../schemas/user")
 const File = require("../schemas/file")
+const Report = require("../schemas/report")
 const multer = require("multer")
 const upload = multer({ dest: "uploadFiles/" })
 const fs = require("fs")
@@ -38,7 +39,7 @@ const addFiles = (articleId, files, list) => {
 const deleteFiles = async (articleId) => {
     const files = await File.find({ articleId: articleId })
     files.forEach((file) => {
-        fs.unlink("uploadfiles/"+file.newName, (e) => {
+        fs.unlink("uploadfiles/" + file.newName, (e) => {
             if (e) console.log("error: ", e)
         })
     })
@@ -60,9 +61,9 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
             fileList: [],
             views: 0,
         })
-        
+
         if (req.files) await addFiles(newArticle._id, req.files, newArticle.fileList)
-        
+
         await newArticle.save()
 
         res.status(200).send({ message: "Success" })
@@ -150,7 +151,7 @@ router.get("/:tag", async (req, res) => {
                 return articleInfo
             })
         )
-        res.json({ 
+        res.json({
             articles, pageNum, startPage, endPage, postLimit, totalPages,
         }).status(200)
     } catch (e) {
@@ -275,6 +276,9 @@ router.delete("/:id", verifyUser, async (req, res) => {
                 await Comment.deleteMany({ articleId: curCmt })
             })
         })
+
+        //Delete Report
+        await Report.deleteMany({ articleId: _id })
 
         //Delete Comment
         await Comment.deleteMany({ articleId: _id })
