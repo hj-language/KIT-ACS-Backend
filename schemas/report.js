@@ -7,9 +7,15 @@ let reportSchema = new Schema(
             type: String,
             required: true,
         },
-        reportTarget: {
-            type: String,
+        articleId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "article",
             required: true,
+        },
+        commentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "comment",
+            default: null,
         },
         targetType: {
             type: String,
@@ -18,11 +24,6 @@ let reportSchema = new Schema(
         reason: {
             type: String,
             required: true,
-        },
-        reportCount: {
-            type: Number,
-            required: true,
-            default: 0,
         },
     },
     {

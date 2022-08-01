@@ -4,12 +4,52 @@ const Article = require("../schemas/article")
 const Comment = require("../schemas/comment")
 const User = require("../schemas/user")
 const Report = require("../schemas/report")
+const Page = require("./article")
 const { verifyUser, checkPermission } = require("./middlewares/authorization")
+
+router.post("/", async (req, res) => {
+    const { reporter } = req.body
+    const { id } = req.body
+    const { targetType } = req.body
+    const { reason } = req.body
+
+    try {
+        if (targetType === "article") {
+            let newReport = new Report({
+                reporter: reporter,
+                articleId: id,
+                targetType: targetType,
+                reason: reason,
+            })
+            await newReport.save()
+            res.status(200).send({ message: "Article Reported!!" })
+        } else if (targetType === "comment") {
+            const _articleId = await Article.find({
+                commentList: { $in: [id] },
+            })
+            const articleId = _articleId._id
+            let newReport = new Report({
+                reporter: reporter,
+                articleId: articleId,
+                commentId: id,
+                targetType: targetType,
+                reason: reason,
+            })
+            await newReport.save()
+            res.status(200).send({ message: "Comment Reported!!" })
+        } else {
+            res.status(404).send({ message: "Not Found" })
+        }
+    } catch (e) {
+        console.log("error: ", e)
+        res.status(500).send({ message: "Server Error" })
+    }
+})
 
 router.get("/", async (req, res) => {
     try {
-        // const totalReport = await Report.countDocuments({})
         const reports = await Report.find({}).sort()
+
         res.json({ reports }).status(200)
     } catch (e) {
         console.log("error: ", e)
@@ -17,43 +57,12 @@ router.get("/", async (req, res) => {
     }
 })
 
-router.post("/", async (req, res) => {
-    const { reporter } = req.body
-    const { reportTarget } = req.body
-    const { targetType } = req.body
-    const { reason } = req.body
-
-    // 같은 게시물이 여러 번 신고가 들어올 경우에는 어떤 방식으로 처리 할 것인가???
-    try {
-        let newReport = new Report({
-            reporter: reporter,
-            reportTarget: reportTarget,
-            targetType: targetType,
-            reason: reason,
-        })
-        await newReport.save()
-        res.status(200).send({ message: "Reported!!" })
-    } catch (e) {
-        console.log("error: ", e)
-        res.status(500).send({ message: "Server Error" })
-    }
-})
-
+// 게시물 삭제없이 신고 내역을 삭제하기 위함
 router.delete("/:id", verifyUser, async (req, res) => {
     const { id } = req.params
-    //삭제 권한 조회
-    if (!(await checkPermission(req, res, id, Article))) return
-    if (!(await checkPermission(req, res, id, Comment))) return
-
-    // 삭제 시
-
-    // 댓글의 경우 -> 해당 댓글만 삭제?
-    // 게시물의 경우 -> 게시물, 댓글, 대댓글 전부 삭제?
     try {
-        const deletedArticle = await Article.findByIdAndDelete(id)
-        if (!deletedArticle) {
-            return res.status(404).send({ message: "No Post" })
-        }
+        // 신고 내역 삭제
+        await Report.findByIdAndDelete(id)
         res.status(200).send({ message: "Success" })
     } catch (e) {
         console.log("error: ", e)
