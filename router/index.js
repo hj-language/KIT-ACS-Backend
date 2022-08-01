@@ -16,4 +16,7 @@ router.use("/comment", Comment)
 const Mypage = require("./mypage")
 router.use("/mypage", Mypage)
 
+const Report = require("./report")
+router.use("/report", Report)
+
 module.exports = router

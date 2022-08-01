@@ -11,9 +11,18 @@ let reportSchema = new Schema(
             type: String,
             required: true,
         },
+        targetType: {
+            type: String,
+            required: true,
+        },
         reason: {
             type: String,
             required: true,
+        },
+        reportCount: {
+            type: Number,
+            required: true,
+            default: 0,
         },
     },
     {
