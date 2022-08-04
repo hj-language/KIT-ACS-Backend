@@ -7,6 +7,8 @@ const Report = require("../schemas/report")
 const Page = require("./article")
 const { verifyUser, checkPermission } = require("./middlewares/authorization")
 
+const { paging } = require("./article")
+
 router.post("/", async (req, res) => {
     const { reporter } = req.body
     const { id } = req.body
@@ -47,10 +49,26 @@ router.post("/", async (req, res) => {
 })
 
 router.get("/", async (req, res) => {
+    const { page } = req.query
+    const { limit } = req.query
     try {
-        const reports = await Report.find({}).sort()
+        const totalReport = await Article.countDocuments({})
+        let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
+            paging(page, totalReport, limit)
 
-        res.json({ reports }).status(200)
+        const reports = await Report.find({})
+            .sort({ createAt: -1 })
+            .skip(hidePost)
+            .limit(postLimit)
+
+        res.json({
+            reports,
+            pageNum,
+            startPage,
+            endPage,
+            postLimit,
+            totalPages,
+        }).status(200)
     } catch (e) {
         console.log("error: ", e)
         res.status(500).send({ message: "Server Error" })

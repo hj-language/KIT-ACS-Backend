@@ -48,7 +48,10 @@ const deleteFiles = async (articleId) => {
 
 // 게시물 추가
 router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
-    if (req.body.tag === "notice" && await isUserClassOne(req.session.authorization)) {
+    if (
+        req.body.tag === "notice" &&
+        (await isUserClassOne(req.session.authorization))
+    ) {
         return res.status(401).send({ message: "No Permission" })
     }
 
@@ -62,7 +65,8 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
             views: 0,
         })
 
-        if (req.files) await addFiles(newArticle._id, req.files, newArticle.fileList)
+        if (req.files)
+            await addFiles(newArticle._id, req.files, newArticle.fileList)
 
         await newArticle.save()
 
@@ -73,16 +77,16 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
     }
 })
 
-const paging = (page, totalArticle, limit) => {
+export const paging = (page, totalPost, limit) => {
     page = parseInt(page)
-    totalArticle = parseInt(totalArticle)
+    totalPost = parseInt(totalPost)
     limit = parseInt(limit)
 
     let pageNum = page || 1
     let postLimit = limit || 20
     const pagination = 10
     const hidePost = page === 1 ? 0 : (page - 1) * postLimit
-    const totalPages = Math.ceil((totalArticle - 1) / postLimit)
+    const totalPages = Math.ceil((totalPost - 1) / postLimit)
     const startPage = Math.floor((pageNum - 1) / pagination) * pagination + 1
     let endPage = startPage + pagination - 1
 
@@ -118,7 +122,12 @@ router.get("/", async (req, res) => {
             })
         )
         res.json({
-            articles, pageNum, startPage, endPage, postLimit, totalPages,
+            articles,
+            pageNum,
+            startPage,
+            endPage,
+            postLimit,
+            totalPages,
         }).status(200)
     } catch (e) {
         console.log("error: ", e)
@@ -132,7 +141,10 @@ router.get("/:tag", async (req, res) => {
     const { page } = req.query
     const { limit } = req.query
     try {
-        const totalArticle = await Article.countDocuments({ tag: tag, ...Article, })
+        const totalArticle = await Article.countDocuments({
+            tag: tag,
+            ...Article,
+        })
 
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalArticle, limit)
@@ -144,7 +156,7 @@ router.get("/:tag", async (req, res) => {
 
         const articles = await Promise.all(
             articles_.map(async (article) => {
-                const authorName = await User.findOne({ id: article.author, })
+                const authorName = await User.findOne({ id: article.author })
                 const _name = authorName.name
                 const name = { authorName: _name }
                 const articleInfo = Object.assign(name, article._doc)
@@ -152,7 +164,12 @@ router.get("/:tag", async (req, res) => {
             })
         )
         res.json({
-            articles, pageNum, startPage, endPage, postLimit, totalPages,
+            articles,
+            pageNum,
+            startPage,
+            endPage,
+            postLimit,
+            totalPages,
         }).status(200)
     } catch (e) {
         console.log("error: ", e)
@@ -220,7 +237,7 @@ router.patch("/:id", verifyUser, upload.array("fileList"), async (req, res) => {
     const _id = req.params.id
 
     // 수정 권한 조회
-    if (!await checkPermission(req, res, _id, Article)) return
+    if (!(await checkPermission(req, res, _id, Article))) return
 
     const updateKeys = Object.keys(req.body)
     const allowedKeys = ["title", "content", "tag", "fileList"] // 변경 가능한 것
@@ -229,10 +246,13 @@ router.patch("/:id", verifyUser, upload.array("fileList"), async (req, res) => {
         return res.status(400).send({ message: "Cannot Update" })
     }
 
-    const multipartType = 'multipart/form-data'
+    const multipartType = "multipart/form-data"
 
     // type == multipart    => 기존 파일 삭제
-    if (multipartType == req.headers['content-type'].slice(0, multipartType.length)) {
+    if (
+        multipartType ==
+        req.headers["content-type"].slice(0, multipartType.length)
+    ) {
         const newFileList = new Array()
 
         // Delete File
@@ -263,7 +283,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
 
     //삭제 권한 조회
-    if (!await checkPermission(req, res, _id, Article)) return
+    if (!(await checkPermission(req, res, _id, Article))) return
 
     try {
         //Delete Recomment
