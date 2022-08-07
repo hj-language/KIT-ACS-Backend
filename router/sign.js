@@ -5,6 +5,7 @@ const nodemailer = require("nodemailer")
 const verifyEmail = require("../secret.js").verifyEmail
 const crypto = require("crypto")
 require("dotenv").config()
+const verifyUser = require("./middlewares/authorization").verifyUser
 
 //const path = require("path")
 // var appDir = path.dirname(require.main.filename)
@@ -142,6 +143,32 @@ router.get("/confirmEmail", (req, res) => {
             return res.status(403).send({ message: "Invalid code" })
         }
     })
+})
+
+
+
+//회원 탈퇴
+router.delete("/:id", verifyUser, async (req, res) => {
+    const _id = req.params.id
+
+    User.findOne({ id: req.session.authorization }, async (e, user) => {
+        if (e) {
+            console.log("error: ", e)
+            return res.status(500).send({ message: "Server Error" })
+        }
+        await user.comparePassword(req.body.password, async (_, isMatch) => {
+            if (!isMatch) {
+                return res.status(400).send({ message: "Wrong Password" })
+            } else {
+                const deletedUser = await findByIdAndDelete(_id)
+                if (!deletedUser) {
+                    return res.status(404).send({ message: "No User" })
+                }
+                res.status(200).send({ message: "Success" })
+            }
+        })
+    })
+
 })
 
 module.exports = router

@@ -2,6 +2,7 @@ const express = require("express")
 const router = express.Router()
 const Article = require("../schemas/article")
 const Comment = require("../schemas/comment")
+const Report = require("../schemas/report")
 const { verifyUser, checkPermission } = require("./middlewares/authorization");
 
 //댓글 추가
@@ -118,9 +119,13 @@ router.delete("/:id", verifyUser, async (req, res) => {
             return res.status(500).send({ message: "Server Error" })
         }
 
-        //is recomment
+        //is recomment <DELETE OK>
         if (comment.isRecomment) {
             try {
+                //Delete Report
+                await Report.deleteMany({ commentId: _id })
+
+                //Delete Recomment
                 const deletedComment = await Comment.findByIdAndDelete(_id)
                 if (!deletedComment) {
                     return res.status(404).send({ message: "No Comment" })
@@ -133,7 +138,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
         }
         else {
             try {
-                //have recomment O
+                //have recomment O <DELETE NOPE>
                 const recommentCnt = await Comment.where({ articleId: _id }).countDocuments();
                 console.log(recommentCnt)
                 if (recommentCnt != 0) {
@@ -143,7 +148,11 @@ router.delete("/:id", verifyUser, async (req, res) => {
                         { $set: { isDeleted: true } }).exec()
                     return res.status(200).send({ message: "This Comment have Recomments" })
                 }
-                //have recomment X
+                //have recomment X <DELETE OK>
+                //Delete Report
+                await Report.deleteMany({ commentId: _id })
+
+                //Delte Comment
                 const deletedComment = await Comment.findByIdAndDelete(_id)
                 if (!deletedComment) {
                     return res.status(404).send({ message: "No Comment" })
