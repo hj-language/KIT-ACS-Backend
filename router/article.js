@@ -275,6 +275,20 @@ router.get("/view/:id", async (req, res) => {
     }
 })
 
+// 첨부파일 download (파일 _id 기반)
+router.get("/download/:id", async (req, res) => {
+    const _id = req.params.id
+    const file = await File.findById(_id)
+    const filePath = "uploadFiles/"+file.newName
+    
+    res.download(filePath, file.originName, (e) => {
+        if (e) {
+            console.log("error: ", e)
+            res.status(500).send({ message: "Server Error" })
+        }
+    })
+})
+
 // 게시물 update (_id 기반)
 router.patch("/:id", verifyUser, upload.array("fileList"), async (req, res) => {
     const _id = req.params.id
