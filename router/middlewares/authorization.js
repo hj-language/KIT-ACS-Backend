@@ -23,4 +23,12 @@ const checkPermission = async (req, res, refId, model) => { // model is Article 
     return true
 }
 
-module.exports = { verifyUser, checkPermission }
+const checkAdmin = (req, res, next) => {
+    if (req.session.authorization !== "admin") {
+        res.status(401).send({ message: "No Permission" })
+    } else {
+        next();
+    }
+}
+
+module.exports = { verifyUser, checkPermission, checkAdmin }

@@ -1,16 +1,11 @@
 const express = require("express")
 const router = express.Router()
 const Article = require("../schemas/article")
-const Comment = require("../schemas/comment")
-const User = require("../schemas/user")
 const Report = require("../schemas/report")
-const Page = require("./article")
-const { verifyUser, checkPermission } = require("./middlewares/authorization")
+const { verifyUser, checkAdmin } = require("./middlewares/authorization")
+const paging = require("./js/pagination")
 
-const { paging } = require("./article")
-
-router.post("/", async (req, res) => {
-    const { reporter } = req.body
+router.post("/", verifyUser, async (req, res) => {
     const { id } = req.body
     const { targetType } = req.body
     const { reason } = req.body
@@ -18,7 +13,7 @@ router.post("/", async (req, res) => {
     try {
         if (targetType === "article") {
             let newReport = new Report({
-                reporter: reporter,
+                reporter: req.session.authorization,
                 articleId: id,
                 targetType: targetType,
                 reason: reason,
@@ -31,7 +26,7 @@ router.post("/", async (req, res) => {
             })
             const articleId = _articleId._id
             let newReport = new Report({
-                reporter: reporter,
+                reporter: req.session.authorization,
                 articleId: articleId,
                 commentId: id,
                 targetType: targetType,
@@ -48,7 +43,7 @@ router.post("/", async (req, res) => {
     }
 })
 
-router.get("/", async (req, res) => {
+router.get("/", verifyUser, checkAdmin, async (req, res) => {
     const { page } = req.query
     const { limit } = req.query
     try {
@@ -76,7 +71,7 @@ router.get("/", async (req, res) => {
 })
 
 // 게시물 삭제없이 신고 내역을 삭제하기 위함
-router.delete("/:id", verifyUser, async (req, res) => {
+router.delete("/:id", verifyUser, checkAdmin, async (req, res) => {
     const { id } = req.params
     try {
         // 신고 내역 삭제
