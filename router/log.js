@@ -56,7 +56,10 @@ router.post("/in", (req, res) => {
             }
             req.session.authorization = user.id
             req.session.cookie.expires = new Date(Date.now() + 10 * 30000) // 30초
-            res.status(200).send({ message: `Welcome! ${user.name}` })
+            res.json({
+                class: user.class,
+                message: `Welcome! ${user.name}`
+            }).status(200)
         })
     })
 })

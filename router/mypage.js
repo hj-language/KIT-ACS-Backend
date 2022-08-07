@@ -69,4 +69,27 @@ router.patch("/password", verifyUser, async (req, res) => {
     })
 })
 
+// 유저 등급 변경
+router.patch("/class", verifyUser, async (req, res) => {
+    
+    // admin 확인
+    if (req.session.authorization !== "admin")
+        return res.status(401).send({ message: "No Permission" })
+
+    try {
+        const user = await User.findOneAndUpdate(
+            { id: req.body.id },
+            { $set: { class: req.body.class } }
+        )
+
+        if (!user) {
+            return res.status(404).send({ message: "No User" })
+        }
+        res.status(200).send({ message: "Success" })
+    } catch (e) {
+        console.log("error: ", e)
+        res.status(500).send({ message: "Server Error" })
+    }
+})
+
 module.exports = router
