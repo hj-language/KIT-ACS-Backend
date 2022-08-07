@@ -262,11 +262,13 @@ router.get("/view/:id", async (req, res) => {
             })
         )
 
+        const files = await File.find({ articleId: _id }).select('originName')
+
         await Article.findByIdAndUpdate(_id, {
             $set: { views: ++article.views },
         }).exec()
 
-        res.json({ articleInfo, next, prev }).status(200)
+        res.json({ articleInfo, next, prev, files }).status(200)
     } catch (e) {
         console.log("error: ", e)
         res.status(404).send({ message: "No Post" })
