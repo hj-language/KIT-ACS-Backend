@@ -64,7 +64,15 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
 
         if (req.files) await addFiles(newArticle._id, req.files, newArticle.fileList)
 
-        await newArticle.save()
+        await newArticle.save((e) => {
+            if (e) console.log(e)
+            else console.log('ARticle is added in both databases')
+        })
+
+        newArticle.on('es-indexed', (e, result) => {
+            if (e) console.log(e)
+            else console.log(result)
+        })
 
         res.status(200).send({ message: "Success" })
     } catch (e) {
@@ -92,6 +100,56 @@ const paging = (page, totalArticle, limit) => {
 
     return { startPage, endPage, hidePost, postLimit, totalPages, pageNum }
 }
+
+router.delete("/delete", async(req, res) => {
+    await Article.deleteMany({author: "hyejin"})
+    res.status(200).end()
+})
+
+// 게시물 검색
+router.get("/search", async (req, res) => {
+    const { title, content } = req.query
+    
+    // 검색어가 없거나 둘 다 요청이 들어온 경우 에러
+    if ((!title && !content) || (title && content))
+        return res.status(404).end()
+        
+    let searchOption = new Object()
+    if (title)
+        searchOption.title = { $regex: title }
+    else
+        searchOption.content = { $regex: content }
+    
+    try {
+        // const articles = await Article.search({
+        //     bool: {
+        //         must: {
+        //             match : {
+        //                 regexp: searchOption 
+        //             }
+        //         }
+        //     }
+        // })
+        // const articles = await Article.search({
+        //     query_string: { query: title }
+        // }, (e, result) => {
+        //     console.log(e)
+        //     console.log(result)
+        // })
+        // const articles = await Article.find(
+        //     {$text: {$search: title}},
+        //     {score: {$meta: 'textScore'}}
+        // ).sort({
+        //     score: {$meta: 'textScore'}
+        // })
+        const articles = await Article.find( { tag: { $regex: content } } )
+        console.log(articles)
+        res.json(articles).status(200)
+    } catch (e) {
+        console.log("error: ", e)
+        res.status(500).send({ message: "Server Error" })
+    }
+})
 
 // 전체 게시물 조회
 router.get("/", async (req, res) => {
