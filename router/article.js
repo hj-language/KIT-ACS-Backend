@@ -20,8 +20,7 @@ const paging = require("./js/pagination")
 
 const isUserClassOne = async (id) => {
     const user = await User.findOne({ id: id })
-    if (user.class === 1) return true
-    return false
+    return (user.class === 1)    
 }
 
 const addFiles = (articleId, files, list) => {
@@ -70,13 +69,11 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
             await addFiles(newArticle._id, req.files, newArticle.fileList)
 
         await newArticle.save((e) => {
-            if (e) console.log(e)
-            else console.log('ARticle is added in both databases')
+            if (e) console.log("error: ", e)
         })
 
-        newArticle.on('es-indexed', (e, result) => {
-            if (e) console.log(e)
-            else console.log(result)
+        newArticle.on('es-indexed', (e) => {
+            if (e) console.log("error: ", e)
         })
 
         res.status(200).send({ message: "Success" })
@@ -91,75 +88,59 @@ router.delete("/delete", async(req, res) => {
     res.status(200).end()
 })
 
-// 게시물 검색
-router.get("/search", async (req, res) => {
-    const { title, content } = req.query
-    
-    // 검색어가 없거나 둘 다 요청이 들어온 경우 에러
-    if ((!title && !content) || (title && content))
-        return res.status(404).end()
-        
-    let searchOption = new Object()
-    if (title)
-        searchOption.title = { $regex: title }
-    else
-        searchOption.content = { $regex: content }
-    
-    try {
-        // const articles = await Article.search({
-        //     bool: {
-        //         must: {
-        //             match : {
-        //                 regexp: searchOption 
-        //             }
-        //         }
-        //     }
-        // })
-        // const articles = await Article.search({
-        //     query_string: { query: title }
-        // }, (e, result) => {
-        //     console.log(e)
-        //     console.log(result)
-        // })
-        // const articles = await Article.find(
-        //     {$text: {$search: title}},
-        //     {score: {$meta: 'textScore'}}
-        // ).sort({
-        //     score: {$meta: 'textScore'}
-        // })
-        const articles = await Article.find( { tag: { $regex: content } } )
-        console.log(articles)
-        res.json(articles).status(200)
-    } catch (e) {
-        console.log("error: ", e)
-        res.status(500).send({ message: "Server Error" })
-    }
-})
+const validateAndSetOption = (title, content) => {
+    if (title && content) // 검색어는 둘 중 하나만 허용
+        return null
 
-// 전체 게시물 조회
+    let searchOption = {}
+
+    if (title) {
+        searchOption.title = { $regex: title }
+    } else if (content) {
+        searchOption.content = { $regex: content }
+    } // 검색어가 없는 경우 전체
+
+    return searchOption
+}
+
+const getArticlesWithAuthorName = async (hide, limit, option) => {
+    const articles_ = await Article.find(option)
+        .sort({ createAt: -1 })
+        .skip(hide)
+        .limit(limit)
+
+    return await Promise.all(
+        articles_.map(async (article) => {
+            const authorName = await User.findOne({ id: article.author })
+            const _name = authorName.name
+            const name = { authorName: _name }
+            const articleInfo = Object.assign(name, article._doc)
+            return articleInfo
+        })
+    )
+}
+
+// 게시물 조회
+// title 또는 content가 있으면 검색 기능
 router.get("/", async (req, res) => {
-    const { page } = req.query
-    const { limit } = req.query
+    const { title, content, page, limit } = req.query
+
+    const searchOption = validateAndSetOption(title, content)
+    if (!searchOption)
+        return res.status(404).end()
+
     try {
-        const totalArticle = await Article.countDocuments({})
+        const totalArticle = await Article.countDocuments(searchOption)
 
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalArticle, limit)
 
-        const articles_ = await Article.find({})
-            .sort({ createAt: -1 })
-            .skip(hidePost)
-            .limit(postLimit)
-
-        const articles = await Promise.all(
-            articles_.map(async (article) => {
-                const authorName = await User.findOne({ id: article.author })
-                const _name = authorName.name
-                const name = { authorName: _name }
-                const articleInfo = Object.assign(name, article._doc)
-                return articleInfo
-            })
+        const articles = await getArticlesWithAuthorName(
+            hidePost, 
+            postLimit, 
+            searchOption
         )
+
         res.json({
             articles,
             pageNum,
@@ -175,33 +156,29 @@ router.get("/", async (req, res) => {
 })
 
 // 게시물 태그별 조회
+// title 또는 content가 있으면 검색 기능
 router.get("/:tag", async (req, res) => {
     const { tag } = req.params
-    const { page } = req.query
-    const { limit } = req.query
+    const { title, content, page, limit } = req.query
+
+    let searchOption = validateAndSetOption(title, content)
+    if (!searchOption)
+        return res.status(404).end()
+    
+    searchOption.tag = tag
+
     try {
-        const totalArticle = await Article.countDocuments({
-            tag: tag,
-            ...Article,
-        })
+        const totalArticle = await Article.countDocuments(searchOption)
 
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalArticle, limit)
 
-        const articles_ = await Article.find({ tag: tag, ...Article })
-            .sort({ createAt: -1 })
-            .skip(hidePost)
-            .limit(postLimit)
-
-        const articles = await Promise.all(
-            articles_.map(async (article) => {
-                const authorName = await User.findOne({ id: article.author })
-                const _name = authorName.name
-                const name = { authorName: _name }
-                const articleInfo = Object.assign(name, article._doc)
-                return articleInfo
-            })
+        const articles = await getArticlesWithAuthorName(
+            hidePost, 
+            postLimit, 
+            searchOption
         )
+
         res.json({
             articles,
             pageNum,
