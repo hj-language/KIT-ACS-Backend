@@ -7,7 +7,7 @@ const paging = (page, totalPost, limit) => {
     let postLimit = limit || 20
     const pagination = 10
     const hidePost = page === 1 ? 0 : (page - 1) * postLimit
-    const totalPages = Math.ceil((totalPost - 1) / postLimit)
+    const totalPages = Math.ceil(totalPost / postLimit)
     const startPage = Math.floor((pageNum - 1) / pagination) * pagination + 1
     let endPage = startPage + pagination - 1
 
