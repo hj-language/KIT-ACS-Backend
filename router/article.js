@@ -20,7 +20,7 @@ const paging = require("./js/pagination")
 
 const isUserClassOne = async (id) => {
     const user = await User.findOne({ id: id })
-    return (user.class === 1)    
+    return user.class === 1
 }
 
 const addFiles = (articleId, files, list) => {
@@ -72,7 +72,7 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
             if (e) console.log("error: ", e)
         })
 
-        newArticle.on('es-indexed', (e) => {
+        newArticle.on("es-indexed", (e) => {
             if (e) console.log("error: ", e)
         })
 
@@ -83,13 +83,14 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
     }
 })
 
-router.delete("/delete", async(req, res) => {
-    await Article.deleteMany({author: "hyejin"})
+router.delete("/delete", async (req, res) => {
+    await Article.deleteMany({ author: "hyejin" })
     res.status(200).end()
 })
 
 const validateAndSetOption = (title, content) => {
-    if (title && content) // 검색어는 둘 중 하나만 허용
+    if (title && content)
+        // 검색어는 둘 중 하나만 허용
         return null
 
     let searchOption = {}
@@ -105,7 +106,7 @@ const validateAndSetOption = (title, content) => {
 
 const getArticlesWithAuthorName = async (hide, limit, option) => {
     const articles_ = await Article.find(option)
-        .sort({ createAt: -1 })
+        .sort({ date: -1 })
         .skip(hide)
         .limit(limit)
 
@@ -126,8 +127,7 @@ router.get("/", async (req, res) => {
     const { title, content, page, limit } = req.query
 
     const searchOption = validateAndSetOption(title, content)
-    if (!searchOption)
-        return res.status(404).end()
+    if (!searchOption) return res.status(404).end()
 
     try {
         const totalArticle = await Article.countDocuments(searchOption)
@@ -136,8 +136,8 @@ router.get("/", async (req, res) => {
             paging(page, totalArticle, limit)
 
         const articles = await getArticlesWithAuthorName(
-            hidePost, 
-            postLimit, 
+            hidePost,
+            postLimit,
             searchOption
         )
 
@@ -162,9 +162,8 @@ router.get("/:tag", async (req, res) => {
     const { title, content, page, limit } = req.query
 
     let searchOption = validateAndSetOption(title, content)
-    if (!searchOption)
-        return res.status(404).end()
-    
+    if (!searchOption) return res.status(404).end()
+
     searchOption.tag = tag
 
     try {
@@ -174,8 +173,8 @@ router.get("/:tag", async (req, res) => {
             paging(page, totalArticle, limit)
 
         const articles = await getArticlesWithAuthorName(
-            hidePost, 
-            postLimit, 
+            hidePost,
+            postLimit,
             searchOption
         )
 
@@ -237,7 +236,7 @@ router.get("/view/:id", async (req, res) => {
             })
         )
 
-        const files = await File.find({ articleId: _id }).select('originName')
+        const files = await File.find({ articleId: _id }).select("originName")
 
         await Article.findByIdAndUpdate(_id, {
             $set: { views: ++article.views },
@@ -254,8 +253,8 @@ router.get("/view/:id", async (req, res) => {
 router.get("/download/:id", async (req, res) => {
     const _id = req.params.id
     const file = await File.findById(_id)
-    const filePath = "uploadFiles/"+file.newName
-    
+    const filePath = "uploadFiles/" + file.newName
+
     res.download(filePath, file.originName, (e) => {
         if (e) {
             console.log("error: ", e)
