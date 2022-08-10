@@ -71,14 +71,8 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
     }
 })
 
-router.delete("/delete", async (req, res) => {
-    await Article.deleteMany({ author: "hyejin" })
-    res.status(200).end()
-})
-
 const validateAndSetOption = (title, content) => {
-    if (title && content)
-        // 검색어는 둘 중 하나만 허용
+    if (title && content) // 검색어는 둘 중 하나만 허용
         return null
 
     let searchOption = {}
@@ -136,6 +130,7 @@ router.get("/", async (req, res) => {
             endPage,
             postLimit,
             totalPages,
+            totalArticle,
         }).status(200)
     } catch (e) {
         console.log("error: ", e)
@@ -173,6 +168,7 @@ router.get("/:tag", async (req, res) => {
             endPage,
             postLimit,
             totalPages,
+            totalArticle,
         }).status(200)
     } catch (e) {
         console.log("error: ", e)
@@ -200,6 +196,10 @@ router.get("/view/:id", async (req, res) => {
             .sort({ _id: -1 })
             .limit(1)
 
+
+        // getArticlesWithAuthorName을
+        // getArticles, addAuthorName으로 분리해서
+        // next, prev에도 함수로 적용할 수 있을 것 같다 ._.
         const next = await Promise.all(
             next_.map(async (article) => {
                 const authorName = await User.findOne({
@@ -242,6 +242,7 @@ router.get("/download/:id", async (req, res) => {
     const _id = req.params.id
     const file = await File.findById(_id)
     const filePath = "uploadFiles/" + file.newName
+    // 파일 없는거 처리해서 없으면 404 에러 보내줘야 할 것 같다.
 
     res.download(filePath, file.originName, (e) => {
         if (e) {
