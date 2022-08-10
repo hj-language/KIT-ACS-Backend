@@ -64,11 +64,6 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
         await newArticle.save((e) => {
             if (e) console.log("error: ", e)
         })
-
-        newArticle.on("es-indexed", (e) => {
-            if (e) console.log("error: ", e)
-        })
-
         res.status(200).send({ message: "Success" })
     } catch (e) {
         console.log("error: ", e)
