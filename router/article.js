@@ -196,10 +196,6 @@ router.get("/view/:id", async (req, res) => {
             .sort({ _id: -1 })
             .limit(1)
 
-
-        // getArticlesWithAuthorName을
-        // getArticles, addAuthorName으로 분리해서
-        // next, prev에도 함수로 적용할 수 있을 것 같다 ._.
         const next = await Promise.all(
             next_.map(async (article) => {
                 const authorName = await User.findOne({
