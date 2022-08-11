@@ -48,6 +48,8 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
         return res.status(401).send({ message: "No Permission" })
     }
 
+    req.body = JSON.parse(req.body.data)
+
     try {
         let newArticle = new Article({
             title: req.body.title,
@@ -109,7 +111,6 @@ router.get("/", async (req, res) => {
     const { title, content, page, limit } = req.query
 
     const searchOption = validateAndSetOption(title, content)
-
     if (!searchOption) return res.status(404).end()
 
     try {
@@ -146,8 +147,8 @@ router.get("/:tag", async (req, res) => {
     const { title, content, page, limit } = req.query
 
     let searchOption = validateAndSetOption(title, content)
-
     if (!searchOption) return res.status(404).end()
+
     searchOption.tag = tag
 
     try {
@@ -227,6 +228,8 @@ router.get("/view/:id", async (req, res) => {
             $set: { views: ++article.views },
         }).exec()
 
+        articleInfo.isMine = (req.session.authorization == articleInfo.author 
+            || req.session.authorization == "admin")
         res.json({ articleInfo, next, prev, files }).status(200)
     } catch (e) {
         console.log("error: ", e)
