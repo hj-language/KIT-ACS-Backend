@@ -21,7 +21,7 @@ router.get("/", verifyUser, async (req, res) => {
     }
 
     try {
-        Article.find({ author: user.id }, (e, article) => {
+        Article.find({ author: user.id }, (e, articles) => {
             if (e) {
                 console.log("error: ", e)
                 res.status(500).send({ message: "Server Error" })
@@ -30,7 +30,7 @@ router.get("/", verifyUser, async (req, res) => {
                     id: user.id,
                     name: user.name,
                     email: user.webmail,
-                    article: article,
+                    articles: articles,
                 }
                 res.status(200).json(userMypage)
             }

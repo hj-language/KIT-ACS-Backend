@@ -10,16 +10,6 @@ const verifyUser = require("./middlewares/authorization").verifyUser
 //const path = require("path")
 // var appDir = path.dirname(require.main.filename)
 
-router.post("/del", (req, res) => {
-    User.find((err, user) => {
-        if (err) console.log(err)
-        else console.log(user)
-    })
-    User.collection.deleteMany({ name: "박준수" })
-    User.collection.deleteMany({ webmail: "pks5294@kumoh.ac.kr" })
-    res.status(200).end()
-})
-
 router.post("/up", async (req, res) => {
     User.find((e, user) => {
         if (e) console.log(e)

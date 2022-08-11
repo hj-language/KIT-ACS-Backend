@@ -10,7 +10,7 @@ const verifyUser = (req, res, next) => {
 const checkPermission = async (req, res, refId, model) => { // model is Article or Comment
     if (req.session.authorization === "admin") return true
     try {
-        const doc = await model.findOne({ refId, ...model })
+        const doc = await model.findById(refId)
         if (req.session.authorization != doc.author) {
             res.status(401).send({ message: "No Permission" })
             return false

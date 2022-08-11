@@ -29,6 +29,10 @@ router.post("/:id", verifyUser, (req, res) => {
                     return res.status(500).send({ message: "Server Error" })
                 }
 
+                // comment id가 잘못된 경우 e에서 걸리는지 ?
+                // 아니면 e는 아닌 채로 comment가 undefined나 null로 뜨는지 ?
+                // 테스트 부탁합니당 ..
+
                 //Documment = Recomment
                 if (comment.isRecomment) {
                     return res.status(404).send({ message: "This is Recomment" })
@@ -152,7 +156,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
                 //Delete Report
                 await Report.deleteMany({ commentId: _id })
 
-                //Delte Comment
+                //Delete Comment
                 const deletedComment = await Comment.findByIdAndDelete(_id)
                 if (!deletedComment) {
                     return res.status(404).send({ message: "No Comment" })

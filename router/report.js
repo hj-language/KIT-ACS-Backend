@@ -63,6 +63,7 @@ router.get("/", verifyUser, checkAdmin, async (req, res) => {
             endPage,
             postLimit,
             totalPages,
+            totalReport
         }).status(200)
     } catch (e) {
         console.log("error: ", e)

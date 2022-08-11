@@ -1,13 +1,11 @@
 const mongoose = require('mongoose')
 const { Schema } = mongoose
-const mongoosastic = require('mongoosastic')
 
 let articleSchema = new Schema({
     title:
     {
         type: String,
-        required: true,
-        es_indexed: true
+        required: true
     },
     author:
     {
@@ -22,8 +20,7 @@ let articleSchema = new Schema({
     content:
     {
         type: String,
-        required: true,
-        es_indexed: true
+        required: true
     },
     views:
     {
@@ -49,10 +46,5 @@ let articleSchema = new Schema({
         versionKey: false
     }
 )
-
-articleSchema.plugin(mongoosastic, {
-    "host": "localhost",
-    "port": 9200
-})
 
 module.exports = mongoose.model("article", articleSchema)

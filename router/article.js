@@ -11,16 +11,9 @@ const fs = require("fs")
 const { verifyUser, checkPermission } = require("./middlewares/authorization")
 const paging = require("./js/pagination")
 
-// Status Code
-// 400 Bad Request
-// 401 Unauthorized
-// 403 Forbidden
-// 404 Not Found
-// 500 Internal Server Error
-
 const isUserClassOne = async (id) => {
     const user = await User.findOne({ id: id })
-    return (user.class === 1)    
+    return user.class === 1
 }
 
 const addFiles = (articleId, files, list) => {
@@ -71,21 +64,11 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
         await newArticle.save((e) => {
             if (e) console.log("error: ", e)
         })
-
-        newArticle.on('es-indexed', (e) => {
-            if (e) console.log("error: ", e)
-        })
-
         res.status(200).send({ message: "Success" })
     } catch (e) {
         console.log("error: ", e)
         res.status(500).send({ message: "Server Error" })
     }
-})
-
-router.delete("/delete", async(req, res) => {
-    await Article.deleteMany({author: "hyejin"})
-    res.status(200).end()
 })
 
 const validateAndSetOption = (title, content) => {
@@ -105,7 +88,7 @@ const validateAndSetOption = (title, content) => {
 
 const getArticlesWithAuthorName = async (hide, limit, option) => {
     const articles_ = await Article.find(option)
-        .sort({ createAt: -1 })
+        .sort({ date: -1 })
         .skip(hide)
         .limit(limit)
 
@@ -126,8 +109,8 @@ router.get("/", async (req, res) => {
     const { title, content, page, limit } = req.query
 
     const searchOption = validateAndSetOption(title, content)
-    if (!searchOption)
-        return res.status(404).end()
+
+    if (!searchOption) return res.status(404).end()
 
     try {
         const totalArticle = await Article.countDocuments(searchOption)
@@ -136,8 +119,8 @@ router.get("/", async (req, res) => {
             paging(page, totalArticle, limit)
 
         const articles = await getArticlesWithAuthorName(
-            hidePost, 
-            postLimit, 
+            hidePost,
+            postLimit,
             searchOption
         )
 
@@ -148,6 +131,7 @@ router.get("/", async (req, res) => {
             endPage,
             postLimit,
             totalPages,
+            totalArticle,
         }).status(200)
     } catch (e) {
         console.log("error: ", e)
@@ -162,9 +146,8 @@ router.get("/:tag", async (req, res) => {
     const { title, content, page, limit } = req.query
 
     let searchOption = validateAndSetOption(title, content)
-    if (!searchOption)
-        return res.status(404).end()
-    
+
+    if (!searchOption) return res.status(404).end()
     searchOption.tag = tag
 
     try {
@@ -174,8 +157,8 @@ router.get("/:tag", async (req, res) => {
             paging(page, totalArticle, limit)
 
         const articles = await getArticlesWithAuthorName(
-            hidePost, 
-            postLimit, 
+            hidePost,
+            postLimit,
             searchOption
         )
 
@@ -186,6 +169,7 @@ router.get("/:tag", async (req, res) => {
             endPage,
             postLimit,
             totalPages,
+            totalArticle,
         }).status(200)
     } catch (e) {
         console.log("error: ", e)
@@ -237,7 +221,7 @@ router.get("/view/:id", async (req, res) => {
             })
         )
 
-        const files = await File.find({ articleId: _id }).select('originName')
+        const files = await File.find({ articleId: _id }).select("originName")
 
         await Article.findByIdAndUpdate(_id, {
             $set: { views: ++article.views },
@@ -254,8 +238,9 @@ router.get("/view/:id", async (req, res) => {
 router.get("/download/:id", async (req, res) => {
     const _id = req.params.id
     const file = await File.findById(_id)
-    const filePath = "uploadFiles/"+file.newName
-    
+    const filePath = "uploadFiles/" + file.newName
+    // 파일 없는거 처리해서 없으면 404 에러 보내줘야 할 것 같다.
+
     res.download(filePath, file.originName, (e) => {
         if (e) {
             console.log("error: ", e)
@@ -334,6 +319,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
 
         //Delete Comment
         await Comment.deleteMany({ articleId: _id })
+        // Recomment도 삭제가 되나요.? 테스트 부탁합니다 ,,
 
         //Delete File
         await deleteFiles(_id)
