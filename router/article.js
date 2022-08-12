@@ -41,14 +41,14 @@ const deleteFiles = async (articleId) => {
 
 // 게시물 추가
 router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
+    req.body = JSON.parse(req.body.data)
+    
     if (
         req.body.tag === "notice" &&
         (await isUserClassOne(req.session.authorization))
     ) {
         return res.status(401).send({ message: "No Permission" })
     }
-
-    req.body = JSON.parse(req.body.data)
 
     try {
         let newArticle = new Article({
