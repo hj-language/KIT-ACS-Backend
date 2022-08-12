@@ -5,6 +5,7 @@ const User = require("../schemas/user")
 const bcrypt = require("bcrypt")
 const verifyUser = require("./middlewares/authorization").verifyUser
 const saltFactor = require("../secret.js").saltFactor
+const paging = require("./js/pagination")
 
 // Status Code
 // 400 Bad Request
@@ -19,31 +20,41 @@ router.get("/", verifyUser, async (req, res) => {
     if (!user) {
         return res.status(403).send({ message: "Forbidden" })
     }
-
     try {
-        Article.find({ author: user.id }, (e, articles) => {
-            if (e) {
-                console.log("error: ", e)
-                res.status(500).send({ message: "Server Error" })
-            } else {
-                const userMypage = {
-                    id: user.id,
-                    name: user.name,
-                    email: user.webmail,
-                    articles: articles,
-                }
-                res.status(200).json(userMypage)
-            }
-        })
+        const { page, limit } = req.query
+
+        const totalArticle = await Article.countDocuments({ author: user.id })
+
+        let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
+            paging(page, totalArticle, limit)
+
+        const articles_ = await Article.find({ author: user.id })
+            .sort({ date: -1 })
+            .skip(hidePost)
+            .limit(postLimit)
+
+
+        const userMypage = {
+            id: user.id,
+            name: user.name,
+            email: user.webmail,
+            articles: articles_,
+        }
+        res.status(200).json(userMypage)
     } catch (e) {
         console.log("error: ", e)
         res.status(500).send({ message: "Server Error" })
     }
+
+
 })
 
 // 비밀번호 수정
 router.patch("/password", verifyUser, async (req, res) => {
     User.findOne({ id: req.session.authorization }, async (e, user) => {
+        if (!user) {
+            return res.status(404).send({ message: "Not exist" })
+        }
         if (e) {
             console.log("error: ", e)
             return res.status(500).send({ message: "Server Error" })
@@ -71,7 +82,7 @@ router.patch("/password", verifyUser, async (req, res) => {
 
 // 유저 등급 변경
 router.patch("/class", verifyUser, async (req, res) => {
-    
+
     // admin 확인
     if (req.session.authorization !== "admin")
         return res.status(401).send({ message: "No Permission" })

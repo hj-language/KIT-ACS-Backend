@@ -42,7 +42,7 @@ const deleteFiles = async (articleId) => {
 // 게시물 추가
 router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
     req.body = JSON.parse(req.body.data)
-    
+
     if (
         req.body.tag === "notice" &&
         (await isUserClassOne(req.session.authorization))
@@ -204,7 +204,7 @@ router.get("/view/:id", async (req, res) => {
             $set: { views: ++article.views },
         }).exec()
 
-        articleInfo.isMine = (req.session.authorization == articleInfo.author 
+        articleInfo.isMine = (req.session.authorization == articleInfo.author
             || req.session.authorization == "admin")
         res.json({ articleInfo, next, prev, files }).status(200)
     } catch (e) {
@@ -217,6 +217,9 @@ router.get("/view/:id", async (req, res) => {
 router.get("/download/:id", async (req, res) => {
     const _id = req.params.id
     const file = await File.findById(_id)
+    if (!file) {
+        return res.status(404).send({ message: "This is Recomment" })
+    }
     const filePath = "uploadFiles/" + file.newName
     // 파일 없는거 처리해서 없으면 404 에러 보내줘야 할 것 같다.
 
