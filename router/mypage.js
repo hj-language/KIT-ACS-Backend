@@ -44,6 +44,9 @@ router.get("/", verifyUser, async (req, res) => {
 // 비밀번호 수정
 router.patch("/password", verifyUser, async (req, res) => {
     User.findOne({ id: req.session.authorization }, async (e, user) => {
+        if (!user) {
+            return res.status(404).send({ message: "Not exist" })
+        }
         if (e) {
             console.log("error: ", e)
             return res.status(500).send({ message: "Server Error" })
@@ -71,7 +74,7 @@ router.patch("/password", verifyUser, async (req, res) => {
 
 // 유저 등급 변경
 router.patch("/class", verifyUser, async (req, res) => {
-    
+
     // admin 확인
     if (req.session.authorization !== "admin")
         return res.status(401).send({ message: "No Permission" })

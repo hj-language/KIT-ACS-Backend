@@ -24,6 +24,9 @@ router.post("/:id", verifyUser, (req, res) => {
         //Document = Comment or Recomment
         if (!article) {
             Comment.findById(refId, (e, comment) => {
+                if (!comment) {
+                    return res.status(404).send({ message: "Not exist" })
+                }
                 if (e) {
                     console.log("error: ", e)
                     return res.status(500).send({ message: "Server Error" })
@@ -118,6 +121,9 @@ router.delete("/:id", verifyUser, async (req, res) => {
     if (!checkPermission(req, res, _id, Comment)) return
 
     Comment.findById(_id, async (e, comment) => {
+        if (!comment) {
+            return res.status(404).send({ message: "Not exist" })
+        }
         if (e) {
             console.log("error: ", e)
             return res.status(500).send({ message: "Server Error" })
