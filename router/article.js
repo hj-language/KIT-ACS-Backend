@@ -82,7 +82,7 @@ const validateAndSetOption = (title, content) => {
     if (title) {
         searchOption.title = { $regex: title }
     } else if (content) {
-        searchOption.content = { $regex: content }
+        searchOption.content = { $regex: content, $options: 'i' }
     } // 검색어가 없는 경우 전체
 
     return searchOption
@@ -188,39 +188,15 @@ router.get("/view/:id", async (req, res) => {
         const name = { authorName: authorName.name }
         const articleInfo = Object.assign(name, article._doc)
 
-        const next_ = await Article.find({
+        const next = await Article.find({
             date: { $gt: article.date },
         }).limit(1)
 
-        const prev_ = await Article.find({
+        const prev = await Article.find({
             date: { $lt: article.date },
         })
             .sort({ _id: -1 })
             .limit(1)
-
-        const next = await Promise.all(
-            next_.map(async (article) => {
-                const authorName = await User.findOne({
-                    id: article.author,
-                })
-                const _name = authorName.name
-                const name = { authorName: _name }
-                const articleInfo = Object.assign(name, article._doc)
-                return articleInfo
-            })
-        )
-
-        const prev = await Promise.all(
-            prev_.map(async (article) => {
-                const authorName = await User.findOne({
-                    id: article.author,
-                })
-                const _name = authorName.name
-                const name = { authorName: _name }
-                const articleInfo = Object.assign(name, article._doc)
-                return articleInfo
-            })
-        )
 
         const files = await File.find({ articleId: _id }).select("originName")
 
