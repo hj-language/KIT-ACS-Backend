@@ -126,13 +126,26 @@ router.delete("/:id", verifyUser, async (req, res) => {
         //is recomment <DELETE OK>
         if (comment.isRecomment) {
             try {
+                const commentId_ = comment.articleId
+
                 //Delete Report
                 await Report.deleteMany({ commentId: _id })
 
                 //Delete Recomment
-                const deletedComment = await Comment.findByIdAndDelete(_id)
-                if (!deletedComment) {
-                    return res.status(404).send({ message: "No Comment" })
+                const deletedRecomment = await Comment.findByIdAndDelete(_id)
+
+                //삭제된 comment에 recomment 없어질 때 Delete
+                Comment.findById(commentId_, async (e, comment_) => {
+                    if (comment_.isDeleted == true) {
+                        const recommentCnt = await Comment.where({ articleId: comment_._id }).countDocuments()
+                        if (recommentCnt == 0) {
+                            await Comment.findByIdAndDelete(comment_.id)
+                        }
+                    }
+                })
+
+                if (!deletedRecomment) {
+                    return res.status(404).send({ message: "No Recomment" })
                 }
                 res.status(200).send({ message: "Success" })
             } catch (e) {
@@ -144,7 +157,6 @@ router.delete("/:id", verifyUser, async (req, res) => {
             try {
                 //have recomment O <DELETE NOPE>
                 const recommentCnt = await Comment.where({ articleId: _id }).countDocuments();
-                console.log(recommentCnt)
                 if (recommentCnt != 0) {
                     await Comment.findByIdAndUpdate(_id,
                         { $set: { content: null } }).exec()
