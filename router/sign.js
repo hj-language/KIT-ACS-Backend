@@ -17,71 +17,72 @@ router.post("/up", async (req, res) => {
     })
 
     try {
-        const dupId = await User.findOne({ id: req.body.id })
-        const dupWebmail = await User.findOne({ webmail: req.body.webmail })
-        if (dupId)
-            return res.status(403).send({ message: "사용중인 아이디입니다." })
-        if (dupWebmail)
-            return res.status(403).send({ message: "사용중인 이메일입니다." })
 
-        /*
-        
-        const emailValid = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@kumoh\.ac.kr$/
+        // const dupId = await User.findOne({ id: req.body.id })
+        // const dupWebmail = await User.findOne({ webmail: req.body.webmail })
+        // if (dupId)
+        //     return res.status(403).send({ message: "사용중인 아이디입니다." })
+        // if (dupWebmail)
+        //     return res.status(403).send({ message: "사용중인 이메일입니다." })
 
-        if (!emailValid.test(email)) {
-            return res.json({
-                message: "금오공과대학교 웹메일을 통한 가입만 가능합니다 :)",
-            })
-        }
-        */
-        let email = req.body.webmail
+        // /*
 
-        // 인증방법: 인증사이트 링크 클릭을 통해 인증
-        const toHash = `${req.body.id}${req.body.name}${req.body.webmail}`
-        const code = crypto.createHash("sha256").update(toHash).digest("hex")
+        // const emailValid = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@kumoh\.ac.kr$/
 
-        let transporter = nodemailer.createTransport({
-            service: "naver",
-            auth: {
-                user: verifyEmail.id,
-                pass: verifyEmail.pw,
-            },
-        })
+        // if (!emailValid.test(email)) {
+        //     return res.json({
+        //         message: "금오공과대학교 웹메일을 통한 가입만 가능합니다 :)",
+        //     })
+        // }
+        // */
+        // let email = req.body.webmail
 
-        let mailOptions = {
-            from: verifyEmail.id,
-            to: email, // 대상 메일 주소 req.body.email
-            subject: "[ACS]Authorization Test Mail", // 메일 제목
-            html: `
-            <div style="border: black 2px solid; border-radius: 1rem; margin-right: 1rem; padding: 1rem; text-align: center; max-width: 500px;">
-                <div style="font-size: 2rem">이메일 인증</div></br>
-                <div style="font-size: 1.2rem">
-                    아래 버튼을 눌러 인증을 완료해주세요.
-                </div>
-                </br>
-                <div style="margin: 0.2rem;">
-                    <a 
-                        style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
-                        href='http://localhost:3000/sign/confirmEmail?code=${code}&email=${email}'>이메일 인증하기</a>
-                </div>
-            </div>
-            `,
-        }
+        // // 인증방법: 인증사이트 링크 클릭을 통해 인증
+        // const toHash = `${req.body.id}${req.body.name}${req.body.webmail}`
+        // const code = crypto.createHash("sha256").update(toHash).digest("hex")
 
-        transporter.sendMail(mailOptions, function (e, info) {
-            if (e) {
-                console.log("error: ", e)
-                res.status(500).send({ message: "Server Error" })
-            } else console.log("Email sent: " + info.response)
-            transporter.close()
-        })
+        // let transporter = nodemailer.createTransport({
+        //     service: "naver",
+        //     auth: {
+        //         user: verifyEmail.id,
+        //         pass: verifyEmail.pw,
+        //     },
+        // })
+
+        // let mailOptions = {
+        //     from: verifyEmail.id,
+        //     to: email, // 대상 메일 주소 req.body.email
+        //     subject: "[ACS]Authorization Test Mail", // 메일 제목
+        //     html: `
+        //     <div style="border: black 2px solid; border-radius: 1rem; margin-right: 1rem; padding: 1rem; text-align: center; max-width: 500px;">
+        //         <div style="font-size: 2rem">이메일 인증</div></br>
+        //         <div style="font-size: 1.2rem">
+        //             아래 버튼을 눌러 인증을 완료해주세요.
+        //         </div>
+        //         </br>
+        //         <div style="margin: 0.2rem;">
+        //             <a 
+        //                 style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
+        //                 href='http://localhost:3000/sign/confirmEmail?code=${code}&email=${email}'>이메일 인증하기</a>
+        //         </div>
+        //     </div>
+        //     `,
+        // }
+
+        // transporter.sendMail(mailOptions, function (e, info) {
+        //     if (e) {
+        //         console.log("error: ", e)
+        //         res.status(500).send({ message: "Server Error" })
+        //     } else console.log("Email sent: " + info.response)
+        //     transporter.close()
+        // })
 
         let user = new User({
             id: req.body.id,
             password: req.body.password,
             name: req.body.name,
             webmail: req.body.webmail,
-            verify: false,
+            verify: true,
         })
         user.save((e) => {
             if (e) {
@@ -138,8 +139,7 @@ router.get("/confirmEmail", (req, res) => {
 
 
 //회원 탈퇴
-router.delete("/:id", verifyUser, async (req, res) => {
-    const _id = req.params.id
+router.delete("/", verifyUser, async (req, res) => {
 
     User.findOne({ id: req.session.authorization }, async (e, user) => {
         if (e) {
@@ -150,7 +150,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
             if (!isMatch) {
                 return res.status(400).send({ message: "Wrong Password" })
             } else {
-                const deletedUser = await findByIdAndDelete(_id)
+                const deletedUser = await User.findOneAndDelete({ id: req.session.authorization });
                 if (!deletedUser) {
                     return res.status(404).send({ message: "No User" })
                 }
