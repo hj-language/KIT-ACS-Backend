@@ -29,8 +29,8 @@ jobs:
     - run: npm ci --force
     
     - name: ssh
-    - uses: appleboy/ssh-action@master
-    - with:
+      uses: appleboy/ssh-action@master
+      with:
         host: ${{ secrets.PUBLIC_IP }}
         username: ${{ secrets.NAME }}
         key: ${{ secrets.KEY }}
