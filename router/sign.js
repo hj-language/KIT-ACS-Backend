@@ -15,6 +15,7 @@ router.post("/up", async (req, res) => {
         if (e) console.log(e)
         else console.log(user)
     })
+    req.body.webmail += "@kumoh.ac.kr"
 
     try {
 
@@ -99,19 +100,20 @@ router.post("/up", async (req, res) => {
 
 // 아이디 중복 확인
 router.get("/dupId", async (req, res) => {
-    if (!req.body.id) return res.status(404).send({ message: "No User" })
+    if (!req.query.id) return res.status(404).send({ message: "No User" })
 
-    const dupId = await User.findOne({ id: req.body.id })
+    const dupId = await User.findOne({ id: req.query.id })
     if (dupId) return res.status(403).send({ message: "Duplicated Id" })
     else return res.status(200).send({ message: "OK" })
 })
 
 // 이메일 중복 확인
 router.get("/dupWebmail", async (req, res) => {
-    if (!req.body.webmail) return res.status(404).send({ message: "No User" })
+    req.query.webmail += "@kumoh.ac.kr"
+    if (!req.query.webmail) return res.status(404).send({ message: "No User" })
 
-    const dupWebmail = await User.findOne({ webmail: req.body.webmail })
-    if (dupWebmail) return res.status(403).send({ message: "Duplicated Id" })
+    const dupWebmail = await User.findOne({ webmail: req.query.webmail })
+    if (dupWebmail) return res.status(403).send({ message: "Duplicated Webmail" })
     else return res.status(200).send({ message: "OK" })
 })
 
