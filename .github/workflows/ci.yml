@@ -27,14 +27,11 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci --force
-    
-    - name: ssh
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.PUBLIC_IP }}
-        username: ${{ secrets.NAME }}
-        key: ${{ secrets.KEY }}
-        script: |
-          whoami
-          ls -al
 
+    # Runs a single command using the runners shell
+    - name: Login to Oracle Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: yny.ocir.io
+        username:  ${{ secrets.NAME }} 
+        password:  ${{ secrets.KEY }}
