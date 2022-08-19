@@ -87,7 +87,7 @@ router.patch("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
 
     // 수정 권한 조회
-    if (!checkPermission(req, res, _id, Comment)) return
+    if (!await checkPermission(req, res, _id, Comment)) return
 
     const comment = Object.keys(req.body)
     const allowedUpdates = ["content"]
@@ -118,7 +118,7 @@ router.delete("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
 
     // 삭제 권한 조회
-    if (!checkPermission(req, res, _id, Comment)) return
+    if (!await checkPermission(req, res, _id, Comment)) return
 
     Comment.findById(_id, async (e, comment) => {
         if (!comment) {
