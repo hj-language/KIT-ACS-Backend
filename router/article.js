@@ -301,7 +301,6 @@ router.delete("/:id", verifyUser, async (req, res) => {
 
         //Delete Comment
         await Comment.deleteMany({ articleId: _id })
-        // Recomment도 삭제가 되나요.? 테스트 부탁합니다 ,,
 
         //Delete File
         await deleteFiles(_id)

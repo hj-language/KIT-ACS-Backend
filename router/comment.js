@@ -2,6 +2,7 @@ const express = require("express")
 const router = express.Router()
 const Article = require("../schemas/article")
 const Comment = require("../schemas/comment")
+const User = require("../schemas/user")
 const Report = require("../schemas/report")
 const { verifyUser, checkPermission } = require("./middlewares/authorization");
 
@@ -70,12 +71,29 @@ router.post("/:id", verifyUser, (req, res) => {
     })
 })
 
+const addAuthorInfo = async (doc, userId) => {
+    const author = await User.findOne({ id: doc.author })
+    const authorInfo = { 
+        authorName: author.name,
+        isMine: (userId == doc.author || userId == "admin")
+    }
+    const info = Object.assign(authorInfo, doc._doc)
+    return info
+}
+
 // 전체 댓글 조회
 router.get("/:id", async (req, res) => {
     try {
-        const comments = await Comment.find({ articleId: req.params.id }).populate("recommentList")
+        const comments_ = await Comment.find({ articleId: req.params.id }).populate("recommentList")
+        const comments = await Promise.all(
+            comments_.map(async (comment) => {
+                await comment.recommentList.forEach(async (recomment) => {
+                    recomment._doc = await addAuthorInfo(recomment, req.session.authorization)
+                })
+                return await addAuthorInfo(comment, req.session.authorization)
+            })
+        )
         res.json(comments).status(200)
-        console.log(comments)
     } catch (e) {
         console.log("error: ", e)
         res.status(500).send({ message: "Server Error" })
