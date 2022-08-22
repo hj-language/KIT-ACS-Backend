@@ -1,6 +1,8 @@
 const express = require("express")
 const router = express.Router()
 const User = require("../schemas/user")
+const Article = require("../schemas/article")
+const Comment = require("../schemas/comment")
 const nodemailer = require("nodemailer")
 const verifyEmail = require("../secret.js").verifyEmail
 const crypto = require("crypto")
@@ -154,17 +156,31 @@ router.delete("/", verifyUser, async (req, res) => {
             console.log("error: ", e)
             return res.status(500).send({ message: "Server Error" })
         }
-        await user.comparePassword(req.body.password, async (_, isMatch) => {
-            if (!isMatch) {
-                return res.status(400).send({ message: "Wrong Password" })
-            } else {
-                const deletedUser = await User.findOneAndDelete({ id: req.session.authorization });
-                if (!deletedUser) {
-                    return res.status(404).send({ message: "No User" })
+
+        try {
+            await user.comparePassword(req.body.password, async (_, isMatch) => {
+                if (!isMatch) {
+                    return res.status(400).send({ message: "Wrong Password" })
+                } else {
+    
+                    // 게시글 author 변경
+                    await Article.updateMany({author: user.id}, {$set: { author: "" }})
+    
+                    // 댓글, 대댓글 author 변경
+                    await Comment.updateMany({author: user.id}, {$set: { author: "" }})
+    
+                    // 회원 DB에서 삭제
+                    const deletedUser = await User.findOneAndDelete({ id: req.session.authorization });
+                    if (!deletedUser) {
+                        return res.status(404).send({ message: "No User" })
+                    }
+                    res.status(200).send({ message: "Success" })
                 }
-                res.status(200).send({ message: "Success" })
-            }
-        })
+            })
+        } catch (e) {
+            console.log("error: ", e)
+            return res.status(500).send({ message: "Server Error" })
+        }
     })
 
 })

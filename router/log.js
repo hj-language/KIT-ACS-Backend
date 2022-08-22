@@ -55,7 +55,7 @@ router.post("/in", (req, res) => {
                 return res.status(400).send({ message: "Wrong ID or Password" })
             }
             req.session.authorization = user.id
-            req.session.cookie.expires = new Date(Date.now() + 5 * 1000 * 60) // 5분
+            req.session.cookie.expires = new Date(Date.now() + 10 * 1000 * 60) // 10분
             res.json({
                 class: user.class,
                 message: `Welcome! ${user.name}`
