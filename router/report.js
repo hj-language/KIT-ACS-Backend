@@ -21,18 +21,21 @@ router.post("/", verifyUser, async (req, res) => {
             await newReport.save()
             res.status(200).send({ message: "Article Reported!!" })
         } else if (targetType === "comment") {
+            let articleId
             let doc = await Article.findOne({
                 commentList: { $in: [id] },
             })
-            if(doc == null)
-            {
+            if(doc == null) {
                 doc = await Comment.findOne({
                     commentList: { $in: [id] },
                 })
+                articleId = doc._articleId
             }
+            else 
+                articleId = doc._id
             let newReport = new Report({
                 reporter: req.session.authorization,
-                articleId: doc._id,
+                articleId: articleId,
                 commentId: id,
                 targetType: targetType,
                 reason: reason,
@@ -52,7 +55,7 @@ router.get("/", verifyUser, checkAdmin, async (req, res) => {
     const { page } = req.query
     const { limit } = req.query
     try {
-        const totalReport = await Article.countDocuments({})
+        const totalReport = await Report.countDocuments({})
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalReport, limit)
 
