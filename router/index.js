@@ -19,4 +19,7 @@ router.use("/mypage", Mypage)
 const Report = require("./report")
 router.use("/report", Report)
 
+const Crawler = require("./crawler")
+router.use("/crawler", Crawler)
+
 module.exports = router
