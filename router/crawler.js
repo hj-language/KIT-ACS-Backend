@@ -2,18 +2,13 @@ const express = require("express");
 const router = express.Router()
 const axios = require("axios");
 const cheerio = require("cheerio");
+const Notice = require("../schemas/notice")
+const Crawler = require("../schemas/crawler")
 
 // URLS
 const CE = "https://ce.kumoh.ac.kr/ce/sub0501.do";
 const CS = "https://cs.kumoh.ac.kr/cs/sub0601.do";
 const AI = "https://ai.kumoh.ac.kr/ai/sub0501.do";
-
-async function callBack(dict)
-{
-    console.log(dict)
-    const result = dict
-    return await result
-}
 
 async function GetHTML(url)
 {
@@ -21,9 +16,9 @@ async function GetHTML(url)
     {
         return await axios.get(url);
     }
-    catch (error)
+    catch (e)
     {
-        console.error(error);
+        console.log("error: ", e)
     }
 }
 
@@ -32,7 +27,6 @@ async function Parse(url)
     var department;
     var prefix;
     var result = new Object();
-    var result = {};
 
     if (url == CE)
     {
@@ -54,9 +48,8 @@ async function Parse(url)
         department = null;
     }
     
-    GetHTML(url).then(html => {
+    return GetHTML(url).then(html => {
         var titles = [];
-        var links = [];
         var hrefs = [];
 
         const $ = cheerio.load(html.data);
@@ -78,36 +71,52 @@ async function Parse(url)
             hrefs[i] = prefix + $(elem).attr('href');
         })
 
-        var i = 0;
+        var i = 0
 
-        result["학과"] = department;
+        let noticeIdList = []
 
-        titles.forEach(function(title)
+        titles.forEach(async function(title)
         {
             result[title] = hrefs[i++];
+            let newNotice = new Notice({
+                title: title,
+                link: hrefs[i++]
+            })
+            await newNotice.save((e) => {
+                if (e) console.log("error: ", e)
+            })
+            noticeIdList.push(newNotice._id)
         })
-        return result
-    }).then(res => callBack(result))
+        return noticeIdList
+    })
 }
 
-async function Action()
-{
-    var data;
-    data = await Parse(CE);
-    data = await Parse(CS);
-    data = await Parse(AI);
-    console.log(data)
+async function cralwer_add () {
+    let newCrawler = new Crawler({
+        ce: await Parse(CE),
+        cs: await Parse(CS),
+        ai: await Parse(AI),
+        num: 1
+    })
+    await newCrawler.save((e) => {
+        if (e) console.log("error: ", e)
+    })
+}
+
+async function cralwer_delete () {
+    await Notice.deleteMany()
+    await Crawler.deleteMany()
 }
 
 router.get("/", async (req, res) => {
-    const PostCE = await Parse(CE);
-    const PostCS = await Parse(CS);
-    const PostAI = await Parse(AI);
-    //console.log(PostCE)
-    Action()
     try 
     {
-        res.json({PostCE, PostCS, PostAI}).status(200)
+        res.json(
+            await Crawler.findOne({num: 1})
+            .populate("ce")
+            .populate("cs")
+            .populate("ai")
+        ).status(200)
     } 
     catch (e) 
     {
@@ -116,4 +125,4 @@ router.get("/", async (req, res) => {
     }
 })
 
-module.exports = router
+module.exports = { router, cralwer_add, cralwer_delete }
