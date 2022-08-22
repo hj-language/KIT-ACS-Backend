@@ -21,13 +21,18 @@ router.post("/", verifyUser, async (req, res) => {
             await newReport.save()
             res.status(200).send({ message: "Article Reported!!" })
         } else if (targetType === "comment") {
-            const _articleId = await Article.find({
+            let doc = await Article.findOne({
                 commentList: { $in: [id] },
             })
-            const articleId = _articleId._id
+            if(doc == null)
+            {
+                doc = await Comment.findOne({
+                    commentList: { $in: [id] },
+                })
+            }
             let newReport = new Report({
                 reporter: req.session.authorization,
-                articleId: articleId,
+                articleId: doc._id,
                 commentId: id,
                 targetType: targetType,
                 reason: reason,
