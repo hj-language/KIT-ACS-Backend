@@ -147,7 +147,7 @@ router.get("/confirmEmail", (req, res) => {
 router.delete("/", verifyUser, async (req, res) => {
 
     User.findOne({ id: req.session.authorization }, async (e, user) => {
-        if (!comment) {
+        if (!user) {
             return res.status(404).send({ message: "Not exist" })
         }
         if (e) {
