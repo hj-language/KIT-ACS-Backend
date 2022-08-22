@@ -96,9 +96,10 @@ const getArticlesWithAuthorName = async (hide, limit, option) => {
 
     return await Promise.all(
         articles_.map(async (article) => {
-            const authorName = await User.findOne({ id: article.author })
-            const _name = authorName.name
-            const name = { authorName: _name }
+            const author = await User.findOne({ id: article.author })
+            const name = { 
+                authorName: author ? author.name : "(알 수 없음)"
+            }
             const articleInfo = Object.assign(name, article._doc)
             return articleInfo
         })
@@ -184,8 +185,10 @@ router.get("/view/:id", async (req, res) => {
 
     try {
         const article = await Article.findOne({ _id, ...Article })
-        const authorName = await User.findOne({ id: article.author })
-        const name = { authorName: authorName.name }
+        const author = await User.findOne({ id: article.author })
+        const name = { 
+            authorName: author != null? author.name : ""
+        }
         const articleInfo = Object.assign(name, article._doc)
 
         const next = await Article.find({

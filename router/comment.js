@@ -74,7 +74,7 @@ router.post("/:id", verifyUser, (req, res) => {
 const addAuthorInfo = async (doc, userId) => {
     const author = await User.findOne({ id: doc.author })
     const authorInfo = { 
-        authorName: author.name,
+        authorName: author != null? author.name : "",
         isMine: (userId == doc.author || userId == "admin")
     }
     const info = Object.assign(authorInfo, doc._doc)
@@ -134,7 +134,7 @@ router.patch("/:id", verifyUser, async (req, res) => {
 // 댓글 삭제 (_id 기반)
 router.delete("/:id", verifyUser, async (req, res) => {
     const _id = req.params.id
-
+    
     // 삭제 권한 조회
     if (!await checkPermission(req, res, _id, Comment)) return
 
