@@ -1,3 +1,5 @@
+const express = require("express");
+const router = express.Router()
 const axios = require("axios");
 const cheerio = require("cheerio");
 
@@ -6,21 +8,11 @@ const CE = "https://ce.kumoh.ac.kr/ce/sub0501.do";
 const CS = "https://cs.kumoh.ac.kr/cs/sub0601.do";
 const AI = "https://ai.kumoh.ac.kr/ai/sub0501.do";
 
-function callBack(dict)
+async function callBack(dict)
 {
-    if (dict['학과'] == 'CE')
-    {
-        console.log("컴공 최고")
-    }
-    else if (dict['학과'] == 'CS')
-    {
-        console.log("컴소 최고")
-    }
-    else if (dict['학과'] == 'AI')
-    {
-        console.log("AI 최고")
-    }
     console.log(dict)
+    const result = dict
+    return await result
 }
 
 async function GetHTML(url)
@@ -94,16 +86,34 @@ async function Parse(url)
         {
             result[title] = hrefs[i++];
         })
-
         return result
     }).then(res => callBack(result))
 }
 
 async function Action()
 {
-    await Parse(CE);
-    await Parse(CS);
-    await Parse(AI);
+    var data;
+    data = await Parse(CE);
+    data = await Parse(CS);
+    data = await Parse(AI);
+    console.log(data)
 }
 
-Action()
+router.get("/", async (req, res) => {
+    const PostCE = await Parse(CE);
+    const PostCS = await Parse(CS);
+    const PostAI = await Parse(AI);
+    //console.log(PostCE)
+    Action()
+    try 
+    {
+        res.json({PostCE, PostCS, PostAI}).status(200)
+    } 
+    catch (e) 
+    {
+        console.log("error: ", e)
+        res.status(500).send({ message: "Server Error" })
+    }
+})
+
+module.exports = router
