@@ -24,28 +24,17 @@ async function GetHTML(url)
 
 async function Parse(url)
 {
-    var department;
     var prefix;
     var result = new Object();
 
-    if (url == CE)
-    {
-        department = "CE";
+    if (url == CE) {
         prefix = "https://ce.kumoh.ac.kr/ce/sub0501.do"
     }
-    else if (url == CS)
-    {
-        department = "CS";
+    else if (url == CS) {
         prefix = "https://cs.kumoh.ac.kr/cs/sub0601.do"
     }
-    else if (url == AI)
-    {
-        department = "AI";
+    else if (url == AI) {
         prefix = "https://ai.kumoh.ac.kr/ai/sub0501.do"
-    }
-    else
-    {
-        department = null;
     }
     
     return GetHTML(url).then(html => {

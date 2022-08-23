@@ -21,7 +21,7 @@ const addFiles = (articleId, files, list) => {
         let newFile = new File({
             articleId: articleId,
             size: file.size,
-            originName: file.originalname,
+            originName: Buffer.from(file.originalname, 'latin1').toString('utf8'),
             newName: file.filename,
         })
         list.push(newFile._id)
