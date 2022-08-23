@@ -66,7 +66,7 @@ async function Parse(url)
 
         titles.forEach(async function(title)
         {
-            result[title] = hrefs[i++];
+            result[title] = hrefs[i];
             let newNotice = new Notice({
                 title: title,
                 link: hrefs[i++]
