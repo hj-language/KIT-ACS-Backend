@@ -20,7 +20,6 @@ let crawlerSchema = new Schema({
 },
     {
         versionKey: false,
-        _id: false
     }
 )
 

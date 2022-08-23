@@ -80,7 +80,7 @@ async function Parse(url)
     })
 }
 
-async function cralwer_add () {
+async function crawler_add () {
     let newCrawler = new Crawler({
         ce: await Parse(CE),
         cs: await Parse(CS),
@@ -92,7 +92,7 @@ async function cralwer_add () {
     })
 }
 
-async function cralwer_delete () {
+async function crawler_delete () {
     await Notice.deleteMany()
     await Crawler.deleteMany()
 }
@@ -114,4 +114,4 @@ router.get("/", async (req, res) => {
     }
 })
 
-module.exports = { router, cralwer_add, cralwer_delete }
+module.exports = { router, crawler_add, crawler_delete }

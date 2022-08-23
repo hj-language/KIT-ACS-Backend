@@ -46,13 +46,14 @@ const port = 3001
 const routers = require("./router")
 app.use("/", routers)
 
-const { cralwer_add, cralwer_delete } = require("./router/crawler")
+const { crawler_add, crawler_delete } = require("./router/crawler")
 
 app.listen(port, function () {
     console.log(`Server Connected on ${port}.`)
 
     setInterval(async ()=> {
-        await cralwer_delete()
-        await cralwer_add()
+        await crawler_delete()
+        await crawler_add()
+        console.log("crawler ")
     }, 1000 * 60 * 30)
 })

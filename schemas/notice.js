@@ -13,7 +13,6 @@ let noticeSchema = new Schema({
 },
     {
         versionKey: false,
-        _id: false
     }
 )
 
