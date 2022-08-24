@@ -1,6 +1,7 @@
 const express = require("express")
 const router = express.Router()
 const Article = require("../schemas/article")
+const Comment = require("../schemas/comment")
 const Report = require("../schemas/report")
 const { verifyUser, checkAdmin } = require("./middlewares/authorization")
 const paging = require("./js/pagination")
@@ -21,7 +22,7 @@ router.post("/", verifyUser, async (req, res) => {
             await newReport.save()
             res.status(200).send({ message: "Article Reported!!" })
         } else if (targetType === "comment") {
-            let articleId
+            let _articleId
             let doc = await Article.findOne({
                 commentList: { $in: [id] },
             })
@@ -29,13 +30,13 @@ router.post("/", verifyUser, async (req, res) => {
                 doc = await Comment.findOne({
                     commentList: { $in: [id] },
                 })
-                articleId = doc._articleId
+                _articleId = doc.articleId
             }
             else 
-                articleId = doc._id
+                _articleId = doc._id
             let newReport = new Report({
                 reporter: req.session.authorization,
-                articleId: articleId,
+                articleId: _articleId,
                 commentId: id,
                 targetType: targetType,
                 reason: reason,
