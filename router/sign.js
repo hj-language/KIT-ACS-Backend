@@ -12,6 +12,23 @@ const verifyUser = require("./middlewares/authorization").verifyUser
 //const path = require("path")
 // var appDir = path.dirname(require.main.filename)
 
+router.get("/findID", async (req, res) => {
+    User.findOne({ webmail: req.body.webmail, name: req.body.name} ,async (e, user) => {
+        if (!user) {
+            return res.status(404).send({ message: "Not exist" })
+        }
+        if (e) {
+            console.log("error: ", e)
+            return res.status(500).send({ message: "Server Error" })
+        }
+        
+        return res.json(user.id).status(200)
+    })
+
+})
+
+
+
 router.post("/up", async (req, res) => {
     User.find((e, user) => {
         if (e) console.log(e)
