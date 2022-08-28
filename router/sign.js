@@ -44,8 +44,13 @@ router.get("/findPassword", async (req, res) => {
         }
         
         const email = user.webmail
-        const toHash = `${user.id}${user.name}${user.webmail}`
+        const toHash = `${user._id}`
         const code = crypto.createHash("sha256").update(toHash).digest("hex")
+        const linkDate = new Date(); 
+        const Day = linkDate.getDate()
+        const Month = linkDate.getMonth() + 1
+        const Year = linkDate.getFullYear()
+
 
         let transporter = nodemailer.createTransport({
             service: "naver",
@@ -54,7 +59,7 @@ router.get("/findPassword", async (req, res) => {
                 pass: verifyEmail.pw,
             },
         })
-
+        
         let mailOptions = {
             from: verifyEmail.id,
             to: email, // 대상 메일 주소 req.body.email
@@ -69,7 +74,7 @@ router.get("/findPassword", async (req, res) => {
                 <div style="margin: 0.2rem;">
                     <a 
                         style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
-                        href='http://localhost:3001/sign/changePassword?code=${code}&email=${email}'>비밀번호 변경하기</a>
+                        href='http://localhost:3001/sign/changePassword/${code}?day=${Day}&month=${Month}&year=${Year}&email=${email}'>비밀번호 변경하기</a>
                 </div>
             </div>
             `,
@@ -92,25 +97,28 @@ router.get("/findPassword", async (req, res) => {
 
 //비번 바꾸는 거니까  post로 했으면 좋겠는데 url 들어가면 기본이 get이니까 get으로 일단 함
 
-
-router.get("/changePassword", (req, res) => {
-    
+router.get("/changePassword/:code", (req, res) => {
+    console.log(req.query)
+    console.log(req.params.code)
     //이거 해야 대나?
-    let toHash, code
+    
+
     User.findOne({webmail: req.query.email} ,async (e, user) => {
-        user.password =  req.body.newPassword
-        console.log(user.password)
-        await user.save()
+        const toHash = `${user._id}`
+        const code = crypto.createHash("sha256").update(toHash).digest("hex")
+        console.log(code)
+        if(req.params.code == code)
+        {
+            
+            user.password =  Math.random().toString(36)
+            console.log(user.password)
+            await user.save()
+        }
         console.log(user)
+        return res.status(200).send(user.password)
     })
 })
 
-
-//    if (code === req.query.code) {
-//        return res.status(200).send({ message: "Success" })
-//   } else {
-//        return res.status(403).send({ message: "Invalid code" })
-//   }
 
 
 router.post("/up", async (req, res) => {
