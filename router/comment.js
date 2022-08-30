@@ -160,6 +160,10 @@ router.delete("/:id", verifyUser, async (req, res) => {
 
                 //삭제된 comment에 recomment 없어질 때 Delete
                 Comment.findById(commentId_, async (e, comment_) => {
+                    if (e) {
+                        console.log("error: ", e)
+                        return
+                    }
                     if (comment_.isDeleted == true) {
                         const recommentCnt = await Comment.where({ articleId: comment_._id }).countDocuments()
                         if (recommentCnt == 0) {
