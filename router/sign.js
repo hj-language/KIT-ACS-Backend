@@ -9,7 +9,8 @@ const crypto = require("crypto")
 const { findOneAndUpdate, findOneAndDelete, findOne, findById, findByIdAndUpdate } = require("../schemas/article")
 require("dotenv").config()
 const verifyUser = require("./middlewares/authorization").verifyUser
-
+const CryptoJS = require("crypto-js");
+//import crypto-js from 'crypto-js'
 //const path = require("path")
 // var appDir = path.dirname(require.main.filename)
 
@@ -44,13 +45,15 @@ router.get("/findPassword", async (req, res) => {
         }
         
         const email = user.webmail
-        const toHash = `${user._id}`
-        const code = crypto.createHash("sha256").update(toHash).digest("hex")
-        const linkDate = new Date(); 
-        const Day = linkDate.getDate()
-        const Month = linkDate.getMonth() + 1
-        const Year = linkDate.getFullYear()
 
+        const linkDate = new Date(); 
+        const day = linkDate.getDate()
+        const month = linkDate.getMonth() + 1
+        const year = linkDate.getFullYear()
+        const date = day + month + year
+
+        const code = CryptoJS.AES.encrypt(`${user._id}${date}`, "acs_secret").toString()
+        //const code = crypto.createHash("sha256").update(toHash).digest("hex")
 
         let transporter = nodemailer.createTransport({
             service: "naver",
@@ -74,7 +77,7 @@ router.get("/findPassword", async (req, res) => {
                 <div style="margin: 0.2rem;">
                     <a 
                         style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
-                        href='http://localhost:3001/sign/changePassword/${code}?day=${Day}&month=${Month}&year=${Year}&email=${email}'>비밀번호 변경하기</a>
+                        href='http://localhost:3001/sign/changePassword/${code}?email=${email}'>비밀번호 변경하기</a>
                 </div>
             </div>
             `,
@@ -98,10 +101,11 @@ router.get("/findPassword", async (req, res) => {
 //비번 바꾸는 거니까  post로 했으면 좋겠는데 url 들어가면 기본이 get이니까 get으로 일단 함
 
 router.get("/changePassword/:code", (req, res) => {
-    console.log(req.query)
     console.log(req.params.code)
     //이거 해야 대나?
-    
+    const bytes = CryptoJS.AES.decrypt(req.params.code, "acs_secret")
+    var decryptedCode = JSON.parse(bytes.toString(CryptoJS.enc.Utf8))
+    console.log(decrypytedCode)
 
     User.findOne({webmail: req.query.email} ,async (e, user) => {
         const toHash = `${user._id}`
