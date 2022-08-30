@@ -97,14 +97,22 @@ const getArticlesWithAuthorName = async (hide, limit, option) => {
     return await Promise.all(
         articles_.map(async (article) => {
             const author = await User.findOne({ id: article.author })
-            const name = { 
-                authorName: author ? author.name : "(알 수 없음)"
+            
+            let count = article.commentList.length
+            for (const comment of article.commentList) {
+                count += await Comment.countDocuments({articleId: comment._id})
             }
-            const articleInfo = Object.assign(name, article._doc)
+
+            const info = { 
+                authorName: author ? author.name : "(알 수 없음)",
+                commentCount: count
+            }
+            const articleInfo = Object.assign(info, article._doc)
             return articleInfo
         })
     )
 }
+
 
 // 게시물 조회
 // title 또는 content가 있으면 검색 기능
