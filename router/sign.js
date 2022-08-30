@@ -66,7 +66,7 @@ router.post("/up", async (req, res) => {
                 <div style="margin: 0.2rem;">
                     <a 
                         style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
-                        href='http://localhost:3000/sign/confirmEmail?code=${code}&email=${email}'>이메일 인증하기</a>
+                        href='http://localhost:3001/sign/confirmEmail?code=${code}&email=${email}'>이메일 인증하기</a>
                 </div>
             </div>
             `,
@@ -136,7 +136,10 @@ router.get("/confirmEmail", (req, res) => {
 
         if (code === req.query.code) {
             User.findByIdAndUpdate(_id, { $set: { verify: true } }).exec()
-            return res.status(200).send({ message: "Success" })
+            res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+            res.write("<script>alert('이메일 인증에 성공했습니다.')</script>");
+            res.write("<script>window.location='http://localhost:3000'</script>");
+            return res.end()
         } else {
             return res.status(403).send({ message: "Invalid code" })
         }
