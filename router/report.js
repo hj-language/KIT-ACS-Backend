@@ -52,7 +52,16 @@ router.post("/", verifyUser, async (req, res) => {
     }
 })
 
-router.get("/", verifyUser, checkAdmin, async (req, res) => {
+const addContent = async (doc) => {
+    const comment = await Comment.findById(doc.commentId)
+    const commentInfo = { 
+        content: comment.content
+    }
+    const info = Object.assign(commentInfo, doc._doc)
+    return info
+}
+
+router.get("/", async (req, res) => {
     const { page } = req.query
     const { limit } = req.query
     try {
@@ -60,10 +69,19 @@ router.get("/", verifyUser, checkAdmin, async (req, res) => {
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalReport, limit)
 
-        const reports = await Report.find({})
+        let reports = await Report.find({})
             .sort({ createAt: -1 })
             .skip(hidePost)
             .limit(postLimit)
+
+        reports = await Promise.all(
+            reports.map(async (report) => {
+                if (report.targetType === "comment")
+                    return await addContent(report)
+                else
+                    return report
+            })
+        )
 
         res.json({
             reports,
