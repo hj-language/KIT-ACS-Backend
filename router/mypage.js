@@ -1,6 +1,7 @@
 const express = require("express")
 const router = express.Router()
 const Article = require("../schemas/article")
+const Comment = require("../schemas/comment")
 const User = require("../schemas/user")
 const bcrypt = require("bcrypt")
 const verifyUser = require("./middlewares/authorization").verifyUser
@@ -13,6 +14,27 @@ const paging = require("./js/pagination")
 // 403 Forbidden
 // 404 Not Found
 // 500 Internal Server Error
+
+const getArticlesWithCommentCount = async (hide, limit, option) => {
+    const articles_ = await Article.find(option)
+        .sort({ date: -1 })
+        .skip(hide)
+        .limit(limit)
+
+    return await Promise.all(
+        articles_.map(async (article) => {
+            let count = article.commentList.length
+            for (const comment of article.commentList) {
+                count += await Comment.countDocuments({articleId: comment._id})
+            }
+            const info = { 
+                commentCount: count
+            }
+            const articleInfo = Object.assign(info, article._doc)
+            return articleInfo
+        })
+    )
+}
 
 // 마이페이지 접속
 router.get("/", verifyUser, async (req, res) => {
@@ -28,10 +50,11 @@ router.get("/", verifyUser, async (req, res) => {
         let { startPage, endPage, hidePost, postLimit, totalPages, pageNum } =
             paging(page, totalArticle, limit)
 
-        const articles_ = await Article.find({ author: user.id })
-            .sort({ date: -1 })
-            .skip(hidePost)
-            .limit(postLimit)
+        const articles_ = await getArticlesWithCommentCount(
+            hidePost,
+            postLimit, 
+            { author: user.id }
+        )
 
         const userMypage = {
             id: user.id,
