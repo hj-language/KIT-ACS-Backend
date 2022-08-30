@@ -23,23 +23,10 @@ async function GetHTML(url)
 }
 
 async function Parse(url)
-{
-    var prefix;
-    var result = new Object();
-
-    if (url == CE) {
-        prefix = "https://ce.kumoh.ac.kr/ce/sub0501.do"
-    }
-    else if (url == CS) {
-        prefix = "https://cs.kumoh.ac.kr/cs/sub0601.do"
-    }
-    else if (url == AI) {
-        prefix = "https://ai.kumoh.ac.kr/ai/sub0501.do"
-    }
-    
+{    
     return GetHTML(url).then(html => {
         var titles = [];
-        var hrefs = [];
+        var links = [];
 
         const $ = cheerio.load(html.data);
         const $titles = $("span.title-wrapper");
@@ -47,29 +34,22 @@ async function Parse(url)
 
         $titles.each(function(i, elem)
         {
-            titles[i] = $(this).text().replace(/\t/g, '').replaceAll('\n','');
-            
-            if (titles[i].toString().startsWith("공지"))
-            {
-                titles[i] = $(this).text().replace(/\t/g, '').replaceAll('\n','').replace('공지', '');
-            }
+            titles[i] = $(this).text().replace(/\t/g, '').replaceAll('\n','').replace("[공지]", '');
         })
 
         $links.each(function(i, elem)
         {
-            hrefs[i] = prefix + $(elem).attr('href');
+            links[i] = url + $(elem).attr('href');
         })
 
-        var i = 0
-
+        let i = 0
         let noticeIdList = []
 
         titles.forEach(async function(title)
         {
-            result[title] = hrefs[i];
             let newNotice = new Notice({
                 title: title,
-                link: hrefs[i++]
+                link: links[i++]
             })
             await newNotice.save((e) => {
                 if (e) console.log("error: ", e)
