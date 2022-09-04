@@ -14,6 +14,15 @@ const CryptoJS = require("crypto-js");
 //const path = require("path")
 // var appDir = path.dirname(require.main.filename)
 
+String.prototype.replaceAt = function(index) {
+    if (index >= this.length) {
+        return this.valueOf();
+    }
+    result = this.substring(0, index) + this.substring(index + 1).replace( /\//gi, 'ㅁ')
+    return result
+    
+}
+ 
 router.get("/findID", async (req, res) => {
     User.findOne({ webmail: req.body.webmail, name: req.body.name} ,async (e, user) => {
         if (!user) {
@@ -50,11 +59,14 @@ router.get("/findPassword", async (req, res) => {
         const day = linkDate.getDate()
         const month = linkDate.getMonth() + 1
         const year = linkDate.getFullYear()
-        const date = day + month + year
-
-        const code = CryptoJS.AES.encrypt(`${user._id}${date}`, "acs_secret").toString()
+        console.log(day, month, year)
+        const date = "ㄴ" + String(year) + "/" +  String(month) + "/" + String(day)
+        console.log(date)
+        let code = CryptoJS.AES.encrypt(`${user._id}${date}`, "acs_secret").toString()
         //const code = crypto.createHash("sha256").update(toHash).digest("hex")
-
+        console.log(code)
+        code = code.replace( /\//gi, 'ㅁ')
+        console.log(code)
         let transporter = nodemailer.createTransport({
             service: "naver",
             auth: {
@@ -101,26 +113,41 @@ router.get("/findPassword", async (req, res) => {
 //비번 바꾸는 거니까  post로 했으면 좋겠는데 url 들어가면 기본이 get이니까 get으로 일단 함
 
 router.get("/changePassword/:code", (req, res) => {
-    console.log(req.params.code)
-    //이거 해야 대나?
-    const bytes = CryptoJS.AES.decrypt(req.params.code, "acs_secret")
-    var decryptedCode = JSON.parse(bytes.toString(CryptoJS.enc.Utf8))
-    console.log(decrypytedCode)
 
-    User.findOne({webmail: req.query.email} ,async (e, user) => {
-        const toHash = `${user._id}`
-        const code = crypto.createHash("sha256").update(toHash).digest("hex")
-        console.log(code)
-        if(req.params.code == code)
-        {
-            
+    //코드 디코딩
+    code = req.params.code.replace( /ㅁ/gi, '/')
+    let bytes = CryptoJS.AES.decrypt(code, "acs_secret")
+    const decryptedCode = bytes.toString(CryptoJS.enc.Utf8)
+
+    //코드에서 날짜 뽑아옴
+    tmp_date = decryptedCode.substring(decryptedCode.indexOf('ㄴ'))
+    code = decryptedCode.slice(0,decryptedCode.indexOf('ㄴ'))
+    date = tmp_date.split("/");
+    year = Number(date[0].slice(1))
+    month = Number(date[1])
+    day = Number(date[2])
+
+    //지금 날짜 받기
+    const linkDate = new Date(); 
+    const nowDay = linkDate.getDate()
+    const nowMonth = linkDate.getMonth() + 1
+    const nowYear = linkDate.getFullYear()
+    console.log(day+ "/" + month + "/" + year)
+    console.log(nowDay+ "/" + nowMonth + "/" + nowYear)
+
+    if(nowYear == year && nowMonth == month && nowDay == day)
+    {
+        User.findOne({webmail: req.query.email} ,async (e, user) => {
             user.password =  Math.random().toString(36)
-            console.log(user.password)
+            newPassword = user.password
             await user.save()
-        }
-        console.log(user)
-        return res.status(200).send(user.password)
-    })
+            return res.status(200).send({newPassword: newPassword})
+        })
+    }
+    else
+    {
+        return res.status(403).send({ message: "유효기간이 만료된 요청" })
+    }
 })
 
 
