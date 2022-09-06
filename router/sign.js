@@ -6,24 +6,16 @@ const Comment = require("../schemas/comment")
 const nodemailer = require("nodemailer")
 const verifyEmail = require("../secret.js").verifyEmail
 const crypto = require("crypto")
-const { findOneAndUpdate, findOneAndDelete, findOne, findById, findByIdAndUpdate } = require("../schemas/article")
 require("dotenv").config()
 const verifyUser = require("./middlewares/authorization").verifyUser
 const CryptoJS = require("crypto-js");
-//import crypto-js from 'crypto-js'
-//const path = require("path")
-// var appDir = path.dirname(require.main.filename)
 
-String.prototype.replaceAt = function(index) {
-    if (index >= this.length) {
-        return this.valueOf();
-    }
-    result = this.substring(0, index) + this.substring(index + 1).replace( /\//gi, 'ㅁ')
-    return result
-    
-}
+router.get("/userdelete", (req,res) => {
+    User.deleteOne({name: "김원렬"})
+})
  
-router.get("/findID", async (req, res) => {
+// 아이디 찾기
+router.post("/id", async (req, res) => {
     User.findOne({ webmail: req.body.webmail, name: req.body.name} ,async (e, user) => {
         if (!user) {
             return res.status(404).send({ message: "Not exist" })
@@ -37,11 +29,8 @@ router.get("/findID", async (req, res) => {
     })
 })
 
-router.get("/userdelete", (req,res) => {
-    User.deleteOne({name: "김원렬"})
-})
-
-router.get("/findPassword", async (req, res) => {
+// 비밀번호 찾기
+router.post("/password", async (req, res) => {
     try
     {
     User.findOne({ id: req.body.id, name: req.body.name} ,async (e, user) => {
@@ -55,18 +44,10 @@ router.get("/findPassword", async (req, res) => {
         
         const email = user.webmail
 
-        const linkDate = new Date(); 
-        const day = linkDate.getDate()
-        const month = linkDate.getMonth() + 1
-        const year = linkDate.getFullYear()
-        console.log(day, month, year)
-        const date = "ㄴ" + String(year) + "/" +  String(month) + "/" + String(day)
-        console.log(date)
+        const date = "ㄴ" + new Date().getTime()
         let code = CryptoJS.AES.encrypt(`${user._id}${date}`, "acs_secret").toString()
-        //const code = crypto.createHash("sha256").update(toHash).digest("hex")
-        console.log(code)
         code = code.replace( /\//gi, 'ㅁ')
-        console.log(code)
+
         let transporter = nodemailer.createTransport({
             service: "naver",
             auth: {
@@ -89,7 +70,7 @@ router.get("/findPassword", async (req, res) => {
                 <div style="margin: 0.2rem;">
                     <a 
                         style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
-                        href='http://localhost:3001/sign/changePassword/${code}?email=${email}'>비밀번호 변경하기</a>
+                        href='http://localhost:3001/sign/password/${code}?email=${email}'>비밀번호 변경하기</a>
                 </div>
             </div>
             `,
@@ -110,48 +91,36 @@ router.get("/findPassword", async (req, res) => {
     }
 })
 
-//비번 바꾸는 거니까  post로 했으면 좋겠는데 url 들어가면 기본이 get이니까 get으로 일단 함
+// 비밀번호 변경
+router.get("/password/:code", (req, res) => {
 
-router.get("/changePassword/:code", (req, res) => {
-
-    //코드 디코딩
-    code = req.params.code.replace( /ㅁ/gi, '/')
+    // 코드 디코딩
+    let code = req.params.code.replace( /ㅁ/gi, '/')
     let bytes = CryptoJS.AES.decrypt(code, "acs_secret")
-    const decryptedCode = bytes.toString(CryptoJS.enc.Utf8)
+    let decryptedCode = bytes.toString(CryptoJS.enc.Utf8)
 
-    //코드에서 날짜 뽑아옴
-    tmp_date = decryptedCode.substring(decryptedCode.indexOf('ㄴ'))
-    code = decryptedCode.slice(0,decryptedCode.indexOf('ㄴ'))
-    date = tmp_date.split("/");
-    year = Number(date[0].slice(1))
-    month = Number(date[1])
-    day = Number(date[2])
+    // 코드에서 날짜 뽑아옴
+    let codeDate = decryptedCode.substring(decryptedCode.indexOf('ㄴ') + 1);
 
     //지금 날짜 받기
-    const linkDate = new Date(); 
-    const nowDay = linkDate.getDate()
-    const nowMonth = linkDate.getMonth() + 1
-    const nowYear = linkDate.getFullYear()
-    console.log(day+ "/" + month + "/" + year)
-    console.log(nowDay+ "/" + nowMonth + "/" + nowYear)
+    const now = new Date();
 
-    if(nowYear == year && nowMonth == month && nowDay == day)
-    {
-        User.findOne({webmail: req.query.email} ,async (e, user) => {
-            user.password =  Math.random().toString(36)
-            newPassword = user.password
-            await user.save()
-            return res.status(200).send({newPassword: newPassword})
-        })
-    }
-    else
-    {
+    if ((now - codeDate) > 60 * 60 * 1000) // 유효기간: 1시간
         return res.status(403).send({ message: "유효기간이 만료된 요청" })
-    }
+        
+    User.findOne({webmail: req.query.email} ,async (e, user) => {
+        user.password =  Math.random().toString(36)
+        newPassword = user.password
+        await user.save()
+
+        res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+        res.write(`<script>alert('임시 비밀번호는 ${newPassword}입니다.')</script>`);
+        res.write("<script>window.location='http://localhost:3000/login'</script>");
+        return res.end()
+    })
 })
 
-
-
+// 회원 가입
 router.post("/up", async (req, res) => {
     User.find((e, user) => {
         if (e) console.log(e)
@@ -285,8 +254,6 @@ router.get("/confirmEmail", (req, res) => {
         }
     })
 })
-
-
 
 //회원 탈퇴
 router.delete("/", verifyUser, async (req, res) => {
