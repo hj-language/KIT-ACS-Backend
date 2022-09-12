@@ -15,8 +15,8 @@ router.get("/userdelete", (req,res) => {
 })
  
 // 아이디 찾기
-router.post("/id", async (req, res) => {
-    User.findOne({ webmail: req.body.webmail, name: req.body.name} ,async (e, user) => {
+router.get("/id", async (req, res) => {
+    User.findOne({ webmail: req.query.webmail, name: req.query.name} ,async (e, user) => {
         if (!user) {
             return res.status(404).send({ message: "Not exist" })
         }
@@ -30,10 +30,10 @@ router.post("/id", async (req, res) => {
 })
 
 // 비밀번호 찾기
-router.post("/password", async (req, res) => {
+router.get("/password", async (req, res) => {
     try
     {
-    User.findOne({ id: req.body.id, name: req.body.name} ,async (e, user) => {
+    User.findOne({ id: req.query.id, name: req.query.name} ,async (e, user) => {
         if (!user) {
             return res.status(404).send({ message: "Not exist" })
         }
