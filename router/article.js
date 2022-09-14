@@ -21,7 +21,9 @@ const addFiles = (articleId, files, list) => {
         let newFile = new File({
             articleId: articleId,
             size: file.size,
-            originName: Buffer.from(file.originalname, 'latin1').toString('utf8'),
+            originName: Buffer.from(file.originalname, "latin1").toString(
+                "utf8"
+            ),
             newName: file.filename,
         })
         list.push(newFile._id)
@@ -74,7 +76,8 @@ router.post("/", verifyUser, upload.array("fileList"), async (req, res) => {
 })
 
 const validateAndSetOption = (title, content) => {
-    if (title && content) // 검색어는 둘 중 하나만 허용
+    if (title && content)
+        // 검색어는 둘 중 하나만 허용
         return null
 
     let searchOption = {}
@@ -82,7 +85,7 @@ const validateAndSetOption = (title, content) => {
     if (title) {
         searchOption.title = { $regex: title }
     } else if (content) {
-        searchOption.content = { $regex: content, $options: 'i' }
+        searchOption.content = { $regex: content, $options: "i" }
     } // 검색어가 없는 경우 전체
 
     return searchOption
@@ -97,22 +100,23 @@ const getArticlesWithAuthorName = async (hide, limit, option) => {
     return await Promise.all(
         articles_.map(async (article) => {
             const author = await User.findOne({ id: article.author })
-            
-            let count = article.commentList.length
+
+            let count = Comment.countDocuments({ articleId: article._id })
             for (const comment of article.commentList) {
-                count += await Comment.countDocuments({articleId: comment._id})
+                count += await Comment.countDocuments({
+                    articleId: comment._id,
+                })
             }
 
-            const info = { 
+            const info = {
                 authorName: author ? author.name : "(알 수 없음)",
-                commentCount: count
+                commentCount: count,
             }
             const articleInfo = Object.assign(info, article._doc)
             return articleInfo
         })
     )
 }
-
 
 // 게시물 조회
 // title 또는 content가 있으면 검색 기능
@@ -194,8 +198,8 @@ router.get("/view/:id", async (req, res) => {
     try {
         const article = await Article.findOne({ _id, ...Article })
         const author = await User.findOne({ id: article.author })
-        const name = { 
-            authorName: author != null? author.name : ""
+        const name = {
+            authorName: author != null ? author.name : "",
         }
         const articleInfo = Object.assign(name, article._doc)
 
@@ -215,8 +219,9 @@ router.get("/view/:id", async (req, res) => {
             $set: { views: ++article.views },
         }).exec()
 
-        articleInfo.isMine = (req.session.authorization == articleInfo.author
-            || req.session.authorization == "admin")
+        articleInfo.isMine =
+            req.session.authorization == articleInfo.author ||
+            req.session.authorization == "admin"
         res.json({ articleInfo, next, prev, files }).status(200)
     } catch (e) {
         console.log("error: ", e)
