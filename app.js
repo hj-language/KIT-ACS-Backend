@@ -6,13 +6,19 @@ app.use(express.json())
 //     origin: "http://localhost:3000",
 //     credential: "true"
 // }))
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
-    res.header("Access-Control-Allow-Credentials", true);
-    next();
-});
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "http://localhost:3000")
+    res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    )
+    res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
+    res.header("Access-Control-Allow-Credentials", true)
+    next()
+})
+
+const helmet = require("helmet")
+app.use(helmet())
 
 const session = require("express-session")
 const redisStore = require("connect-redis")(session)
@@ -51,7 +57,7 @@ const { crawler_add, crawler_delete } = require("./router/crawler")
 app.listen(port, function () {
     console.log(`Server Connected on ${port}.`)
 
-    setInterval(async ()=> {
+    setInterval(async () => {
         await crawler_delete()
         await crawler_add()
         console.log("crawler ")
