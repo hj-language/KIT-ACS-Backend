@@ -9,10 +9,6 @@ const crypto = require("crypto")
 require("dotenv").config()
 const verifyUser = require("./middlewares/authorization").verifyUser
 const CryptoJS = require("crypto-js");
-
-router.get("/userdelete", (req,res) => {
-    User.deleteOne({name: "김원렬"})
-})
  
 // 아이디 찾기
 router.get("/id", async (req, res) => {
@@ -70,7 +66,7 @@ router.get("/password", async (req, res) => {
                 <div style="margin: 0.2rem;">
                     <a 
                         style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
-                        href='http://localhost:3001/sign/password/${code}?email=${email}'>비밀번호 변경하기</a>
+                        href='http://kitacs.com:3001/sign/password/${code}?email=${email}'>비밀번호 변경하기</a>
                 </div>
             </div>
             `,
@@ -115,7 +111,7 @@ router.get("/password/:code", (req, res) => {
 
         res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
         res.write(`<script>alert('임시 비밀번호는 ${newPassword}입니다.')</script>`);
-        res.write("<script>window.location='http://localhost:3000/login'</script>");
+        res.write("<script>window.location='http://kitacs.com:3000/login'</script>");
         return res.end()
     })
 })
@@ -175,7 +171,7 @@ router.post("/up", async (req, res) => {
                 <div style="margin: 0.2rem;">
                     <a 
                         style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
-                        href='http://localhost:3001/sign/confirmEmail?code=${code}&email=${email}'>이메일 인증하기</a>
+                        href='http://kitacs.com:3001/sign/confirmEmail?code=${code}&email=${email}'>이메일 인증하기</a>
                 </div>
             </div>
             `,
@@ -247,7 +243,7 @@ router.get("/confirmEmail", (req, res) => {
             User.findByIdAndUpdate(_id, { $set: { verify: true } }).exec()
             res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
             res.write("<script>alert('이메일 인증에 성공했습니다.')</script>");
-            res.write("<script>window.location='http://localhost:3000'</script>");
+            res.write("<script>window.location='http://kitacs.com:3000'</script>");
             return res.end()
         } else {
             return res.status(403).send({ message: "Invalid code" })
