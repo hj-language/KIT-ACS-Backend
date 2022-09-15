@@ -101,7 +101,7 @@ const getArticlesWithAuthorName = async (hide, limit, option) => {
         articles_.map(async (article) => {
             const author = await User.findOne({ id: article.author })
 
-            let count = Comment.countDocuments({ articleId: article._id })
+            let count = await Comment.countDocuments({ articleId: article._id })
             for (const comment of article.commentList) {
                 count += await Comment.countDocuments({
                     articleId: comment._id,
