@@ -242,6 +242,7 @@ router.get("/confirmEmail", (req, res) => {
         if (code === req.query.code) {
             User.findByIdAndUpdate(_id, { $set: { verify: true } }).exec()
             res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+            res.write("<script>let hi = prompt('안녕?')</script>");
             res.write("<script>alert('이메일 인증에 성공했습니다.')</script>");
             res.write("<script>window.location='http://kitacs.com:3000'</script>");
             return res.end()
