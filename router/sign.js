@@ -284,6 +284,8 @@ router.delete("/", verifyUser, async (req, res) => {
                     if (!deletedUser) {
                         return res.status(404).send({ message: "No User" })
                     }
+                    
+                    req.session.destroy()   // 세션 삭제
                     res.status(200).send({ message: "Success" })
                 }
             })
