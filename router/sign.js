@@ -5,6 +5,7 @@ const Article = require("../schemas/article")
 const Comment = require("../schemas/comment")
 const nodemailer = require("nodemailer")
 const verifyEmail = require("../secret.js").verifyEmail
+const hashingCode = require("../secret.js").hashingCode
 const crypto = require("crypto")
 require("dotenv").config()
 const verifyUser = require("./middlewares/authorization").verifyUser
@@ -41,7 +42,7 @@ router.get("/password", async (req, res) => {
         const email = user.webmail
 
         const date = "ㄴ" + new Date().getTime()
-        let code = CryptoJS.AES.encrypt(`${user._id}${date}`, "acs_secret").toString()
+        let code = CryptoJS.AES.encrypt(`${user._id}${date}`, hashingCode).toString()
         code = code.replace( /\//gi, 'ㅁ')
 
         let transporter = nodemailer.createTransport({
@@ -92,7 +93,7 @@ router.get("/password/:code", (req, res) => {
 
     // 코드 디코딩
     let code = req.params.code.replace( /ㅁ/gi, '/')
-    let bytes = CryptoJS.AES.decrypt(code, "acs_secret")
+    let bytes = CryptoJS.AES.decrypt(code, hashingCode)
     let decryptedCode = bytes.toString(CryptoJS.enc.Utf8)
 
     // 코드에서 날짜 뽑아옴
@@ -263,6 +264,8 @@ router.delete("/", verifyUser, async (req, res) => {
             console.log("error: ", e)
             return res.status(500).send({ message: "Server Error" })
         }
+        
+        req.session.destroy()   // 세션 삭제
 
         try {
             await user.comparePassword(req.body.password, async (_, isMatch) => {
