@@ -64,7 +64,7 @@ router.post("/in", (req, res) => {
     })
 })
 
-router.delete("/out", (req, res) => {
+router.get("/out", (req, res) => {
     if (req.session.authorization) {
         req.session.destroy(() => {
             res.status(200).send({ message: "Goodbye!" })
