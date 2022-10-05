@@ -254,7 +254,7 @@ router.get("/confirmEmail", (req, res) => {
 })
 
 //회원 탈퇴
-router.get("/", verifyUser, async (req, res) => {
+router.delete("/", verifyUser, async (req, res) => {
 
     User.findOne({ id: req.session.authorization }, async (e, user) => {
         if (!user) {
