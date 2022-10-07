@@ -71,7 +71,7 @@ router.delete("/out", (req, res) => {
         // })
         req.session.destroy(() => {
             res.clearCookie('kit_acs');
-            // res.redirect('/');
+            res.redirect('/');
         });
     } else {
         res.status(404).send({ message: "There is no session" })
