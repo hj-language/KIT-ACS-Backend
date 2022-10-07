@@ -70,7 +70,7 @@ router.delete("/out", (req, res) => {
         //     res.status(200).send({ message: "Goodbye!" })
         // })
         req.session.destroy(() => {
-            res.clearCookie('kit_acs', { domain: "localhost", path: "/" });
+            res.clearCookie('kit_acs', { domain: "kitacs.com", path: "/" });
             res.redirect('/');
         });
     } else {
