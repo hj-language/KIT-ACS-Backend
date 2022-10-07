@@ -66,9 +66,13 @@ router.post("/in", (req, res) => {
 
 router.delete("/out", (req, res) => {
     if (req.session.authorization) {
+        // req.session.destroy(() => {
+        //     res.status(200).send({ message: "Goodbye!" })
+        // })
         req.session.destroy(() => {
-            res.status(200).send({ message: "Goodbye!" })
-        })
+            res.clearCookie('kit_acs');
+            // res.redirect('/');
+        });
     } else {
         res.status(404).send({ message: "There is no session" })
     }
