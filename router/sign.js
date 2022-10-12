@@ -67,7 +67,7 @@ router.get("/password", async (req, res) => {
                 <div style="margin: 0.2rem;">
                     <a 
                         style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
-                        href='http://kitacs.com:3001/sign/password/${code}?email=${email}'>비밀번호 변경하기</a>
+                        href='http://kitacs.com:3000/sign/password?code=${code}&email=${email}'>비밀번호 변경하기</a>
                 </div>
             </div>
             `,
@@ -92,7 +92,7 @@ router.get("/password", async (req, res) => {
 router.get("/password/:code", (req, res) => {
 
     // 코드 디코딩
-    let code = req.params.code.replace( /ㅁ/gi, '/')
+    let code = req.query.code.replace( /ㅁ/gi, '/')
     let bytes = CryptoJS.AES.decrypt(code, hashingCode)
     let decryptedCode = bytes.toString(CryptoJS.enc.Utf8)
 
@@ -109,11 +109,7 @@ router.get("/password/:code", (req, res) => {
         user.password =  Math.random().toString(36)
         newPassword = user.password
         await user.save()
-
-        res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-        res.write(`<script>alert('임시 비밀번호는 ${newPassword}입니다.')</script>`);
-        res.write("<script>window.location='http://kitacs.com:3000/login'</script>");
-        return res.end()
+        return res.status(200).send({ newPassword: newPassword })
     })
 })
 
@@ -172,7 +168,7 @@ router.post("/up", async (req, res) => {
                 <div style="margin: 0.2rem;">
                     <a 
                         style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
-                        href='http://kitacs.com:3001/sign/confirmEmail?code=${code}&email=${email}'>이메일 인증하기</a>
+                        href='http://kitacs.com:3000/sign/up/confirmEmail?code=${code}&email=${email}'>이메일 인증하기</a>
                 </div>
             </div>
             `,
@@ -242,11 +238,7 @@ router.get("/confirmEmail", (req, res) => {
 
         if (code === req.query.code) {
             User.findByIdAndUpdate(_id, { $set: { verify: true } }).exec()
-            res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-            res.write("<script>let hi = prompt('안녕?')</script>");
-            res.write("<script>alert('이메일 인증에 성공했습니다.')</script>");
-            res.write("<script>window.location='http://kitacs.com:3000'</script>");
-            return res.end()
+            return res.status(200).send({ message: "Success"})
         } else {
             return res.status(403).send({ message: "Invalid code" })
         }
