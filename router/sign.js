@@ -90,7 +90,7 @@ router.get("/password", async (req, res) => {
 })
 
 // 비밀번호 변경
-router.get("/password/:code", (req, res) => {
+router.get("/password", (req, res) => {
 
     // 코드 디코딩
     let code = req.query.code.replace( /ㅁ/gi, '/')
