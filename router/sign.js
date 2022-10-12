@@ -10,6 +10,7 @@ const crypto = require("crypto")
 require("dotenv").config()
 const verifyUser = require("./middlewares/authorization").verifyUser
 const CryptoJS = require("crypto-js");
+const { crossOriginResourcePolicy } = require("helmet")
  
 // 아이디 찾기
 router.get("/id", async (req, res) => {
@@ -106,10 +107,12 @@ router.get("/password/:code", (req, res) => {
         return res.status(403).send({ message: "유효기간이 만료된 요청" })
         
     User.findOne({webmail: req.query.email} ,async (e, user) => {
+        if (e) {
+            console.log("error: ", e);
+        }
         user.password =  Math.random().toString(36)
-        newPassword = user.password
         await user.save()
-        return res.status(200).send({ newPassword: newPassword })
+        return res.status(200).send({ name: user.name, newPassword: user.password })
     })
 })
 
