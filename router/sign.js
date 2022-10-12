@@ -110,9 +110,10 @@ router.get("/password/:code", (req, res) => {
         if (e) {
             console.log("error: ", e);
         }
-        user.password =  Math.random().toString(36)
+        let newPassword = Math.random().toString(36) 
+        user.password =  newPassword
         await user.save()
-        return res.status(200).send({ name: user.name, newPassword: user.password })
+        return res.status(200).send({ name: user.name, newPassword: newPassword })
     })
 })
 
