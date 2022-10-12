@@ -68,7 +68,7 @@ router.get("/password", async (req, res) => {
                 <div style="margin: 0.2rem;">
                     <a 
                         style="background-color: lightblue; border-radius: 10px; padding: 0.5rem;"
-                        href='http://kitacs.com:3000/sign/password?code=${code}&email=${email}'>비밀번호 변경하기</a>
+                        href='http://kitacs.com:3000/sign/password/${code}?email=${email}'>비밀번호 변경하기</a>
                 </div>
             </div>
             `,
@@ -90,10 +90,10 @@ router.get("/password", async (req, res) => {
 })
 
 // 비밀번호 변경
-router.get("/password", (req, res) => {
+router.get("/password/:code", (req, res) => {
 
     // 코드 디코딩
-    let code = req.query.code.replace( /ㅁ/gi, '/')
+    let code = req.params.code.replace( /ㅁ/gi, '/')
     let bytes = CryptoJS.AES.decrypt(code, hashingCode)
     let decryptedCode = bytes.toString(CryptoJS.enc.Utf8)
 
