@@ -106,8 +106,11 @@ router.get("/password/:code", (req, res) => {
 
     if ((now - codeDate) > 60 * 60 * 1000) // 유효기간: 1시간
         return res.status(403).send({ message: "유효기간이 만료된 요청" })
-        
+    console.log(user_id)
     User.findOne({id: user_id} ,async (e, user) => {
+        if (!user) {
+            return res.status(404).send({ message: "사용자 정보가 없습니다." })
+        }
         if (e) {
             console.log("error: ", e);
             return res.status(500).send({ message: "Server error"})
