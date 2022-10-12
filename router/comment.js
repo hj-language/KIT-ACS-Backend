@@ -87,13 +87,20 @@ router.get("/:id", async (req, res) => {
         const comments_ = await Comment.find({ articleId: req.params.id }).populate("recommentList")
         const comments = await Promise.all(
             comments_.map(async (comment) => {
-                await comment.recommentList.forEach(async (recomment) => {
+                // comment.recommentList.forEach( async (recomment) => {
+                //     recomment._doc = await addAuthorInfo(recomment, req.session.authorization)
+                //     console.log(recomment._doc.authorName)
+                // })
+                for (const recomment of comment.recommentList) {
                     recomment._doc = await addAuthorInfo(recomment, req.session.authorization)
-                })
-                return await addAuthorInfo(comment, req.session.authorization)
+                    console.log(recomment._doc.authorName)
+                }
+                return addAuthorInfo(comment, req.session.authorization)
             })
         )
+        console.log(comments[1])
         res.json(comments).status(200)
+
     } catch (e) {
         console.log("error: ", e)
         res.status(500).send({ message: "Server Error" })
