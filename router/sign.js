@@ -91,7 +91,7 @@ router.get("/password", async (req, res) => {
 
 // 비밀번호 변경
 router.get("/password/:code", (req, res) => {
-
+    console.log(req.params.code, req.query.email)
     // 코드 디코딩
     let code = req.params.code.replace( /ㅁ/gi, '/')
     let bytes = CryptoJS.AES.decrypt(code, hashingCode)
@@ -109,6 +109,7 @@ router.get("/password/:code", (req, res) => {
     User.findOne({webmail: req.query.email} ,async (e, user) => {
         if (e) {
             console.log("error: ", e);
+            return res.status(500).send({ message: "Server error"})
         }
         let newPassword = Math.random().toString(36) 
         user.password =  newPassword
