@@ -91,12 +91,13 @@ router.get("/password", async (req, res) => {
 
 // 비밀번호 변경
 router.get("/password/:code", (req, res) => {
-    console.log(req.params.code, req.query.email)
     // 코드 디코딩
     let code = req.params.code.replace( /ㅁ/gi, '/')
     let bytes = CryptoJS.AES.decrypt(code, hashingCode)
     let decryptedCode = bytes.toString(CryptoJS.enc.Utf8)
 
+    // user_id 받아오기
+    let user_id = decryptedCode.substring(0, decryptedCode.indexOf('ㄴ'));
     // 코드에서 날짜 뽑아옴
     let codeDate = decryptedCode.substring(decryptedCode.indexOf('ㄴ') + 1);
 
@@ -106,7 +107,7 @@ router.get("/password/:code", (req, res) => {
     if ((now - codeDate) > 60 * 60 * 1000) // 유효기간: 1시간
         return res.status(403).send({ message: "유효기간이 만료된 요청" })
         
-    User.findOne({webmail: req.query.email} ,async (e, user) => {
+    User.findOne({id: user_id} ,async (e, user) => {
         if (e) {
             console.log("error: ", e);
             return res.status(500).send({ message: "Server error"})
