@@ -42,18 +42,16 @@ router.post("/in", (req, res) => {
 
 router.delete("/out", (req, res) => {
     if (req.session.authorization) {
-        // req.session.destroy(() => {
-        //     res.status(200).send({ message: "Goodbye!" })
-        // })
-        // console.log(0);
+        req.session.destroy(() => {
+            res.status(200).send({ message: "Goodbye!" })
+        })
         // req.session.destroy((e) => {
         //     if (e) {
         //         console.log("error: ", e)
         //         return;
         //     }
+        //     res.status(200).redirect('/');
         // });
-        req.session = null;
-        res.status(200).redirect('/');
     } else {
         console.log(6);
         res.status(404).send({ message: "There is no session" })
