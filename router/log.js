@@ -40,7 +40,7 @@ router.post("/in", (req, res) => {
     })
 })
 
-router.delete("/out", (req, res) => {
+router.delete("/out", async (req, res) => {
     if (req.session.authorization) {
         // req.session.destroy(() => {
         //     res.status(200).send({ message: "Goodbye!" })
@@ -48,13 +48,16 @@ router.delete("/out", (req, res) => {
         console.log(0);
         req.session.destroy(() => {
             console.log(1);
-            res.clearCookie('kit_acs', { domain: "kitacs.com", path: "/" });
+            req.session;
             console.log(2);
-            res.status(200).redirect('/');
         });
         console.log(3);
-    } else {
+        res.clearCookie('kit_acs', { domain: "kitacs.com", path: "/" });
         console.log(4);
+        res.status(200).redirect('/');
+        console.log(5);
+    } else {
+        console.log(6);
         res.status(404).send({ message: "There is no session" })
     }
 })
