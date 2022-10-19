@@ -45,11 +45,17 @@ router.delete("/out", (req, res) => {
         // req.session.destroy(() => {
         //     res.status(200).send({ message: "Goodbye!" })
         // })
+        console.log(0);
         req.session.destroy(() => {
+            console.log(1);
             res.clearCookie('kit_acs', { domain: "kitacs.com", path: "/" });
+            console.log(2);
             res.redirect('/');
+            console.log(3);
         });
+        console.log(4);
     } else {
+        console.log(01);
         res.status(404).send({ message: "There is no session" })
     }
 })
