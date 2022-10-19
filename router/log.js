@@ -45,13 +45,15 @@ router.delete("/out", (req, res) => {
         // req.session.destroy(() => {
         //     res.status(200).send({ message: "Goodbye!" })
         // })
-        console.log(0);
-        req.session.destroy((e) => {
-            if (e) {
-                console.log("error: ", e)
-                return;
-            }
-        });
+        // console.log(0);
+        // req.session.destroy((e) => {
+        //     if (e) {
+        //         console.log("error: ", e)
+        //         return;
+        //     }
+        // });
+        req.session = null;
+        res.status(200).redirect('/');
     } else {
         console.log(6);
         res.status(404).send({ message: "There is no session" })
