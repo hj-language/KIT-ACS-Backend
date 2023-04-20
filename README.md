@@ -1,10 +1,13 @@
 # Backend
 KIT CE-CS Backend
 
-## 프로젝트 진행 기간
+## Schedule
 2022년 6월 ~ 2022년 12월
 
-## 대표 이미지
+## Skills
+Express.js, MongoDB
+
+## Images
 #### 홈페이지 메인 화면
 ![image](https://file.notion.so/f/s/07a228e5-70ee-4a93-835a-480bfe1140d3/Untitled.png?id=33a3979f-b65e-4152-af38-69f810308417&table=block&spaceId=9909cb76-4fcd-42b0-a78e-478b17387170&expirationTimestamp=1682063291195&signature=3YBy5WI8J_ChpJIrLzXYpoyclafWNAkf93LcxeJj8Vk&downloadName=Untitled.png)
 #### 마이페이지 화면
